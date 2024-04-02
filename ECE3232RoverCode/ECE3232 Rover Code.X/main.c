@@ -174,7 +174,30 @@ void main(void) {
         }
         if (expected_user_info_response(user_data_response))
         {
-            // do USER DATA STUFF
+            if(expected_user_info_response(user_data_response))
+        {
+            left_y = user_data_response[11]<<8 | user_data_response[10];
+                        
+            if (left_y > 1500)
+            {
+                motor_pwm = 100.0*(left_y-1500.0)/500.0;
+                motor_a_direction = 1;  //both motors forward
+                motor_b_direction = 1;
+            }
+            else if (left_y < 1500)
+            {
+                motor_pwm = 100.0*(1500.0-left_y)/500.0;
+                motor_a_direction = 2; //both motors backwards
+                motor_b_direction = 2;
+            }
+            else
+            {    
+                motor_a_direction = 0; //break both motors
+                motor_b_direction = 0;
+            }
+            
+            set_motor_settings(motor_a_direction, (char)motor_pwm, motor_b_direction, (char)motor_pwm);
+        }
         }
         else if (unknown_message(user_data_response))
         {
