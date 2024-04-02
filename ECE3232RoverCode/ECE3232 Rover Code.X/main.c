@@ -169,8 +169,12 @@ void main(void) {
             rx_data_pointer--;
         }
         if (expected_user_info_response(user_data_response))
+            
         {
-            right_y = user_data_response[9]<<8 | user_data_response[8];
+            int motor_pwm;
+            int  motor_a_direction;  //both motors forward
+            int  motor_b_direction;
+            int right_y = user_data_response[9]<<8 | user_data_response[8];
                         
             if (right_y > 1500)
             {
@@ -190,13 +194,13 @@ void main(void) {
                 motor_b_direction = 0;
             }
 
-          left_y = user_data_response[11]<<8 | user_data_response[10]; //pitch
+         int left_y = user_data_response[11]<<8 | user_data_response[10]; //pitch
                         
-           pitch=left_y/10; //convert 
+           int pitch=left_y/10; //convert 
 
 
-        left_x = user_data_response[13]<<8 | user_data_response[12]; //yaw
-           yaw=left_x/10; //convert to frequency for servo 
+       int left_x = user_data_response[13]<<8 | user_data_response[12]; //yaw
+           int yaw=left_x/10; //convert to frequency for servo 
            
         
             
