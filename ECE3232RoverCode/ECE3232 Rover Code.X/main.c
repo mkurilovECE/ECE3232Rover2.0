@@ -155,7 +155,6 @@ void main(void) {
         {
             shield_code_flag=pcls_info_response[10];
             repair_code_flag=pcls_info_response[11];
-            if(repair_code_flag)
         }
         else if (unknown_message(pcls_info_response))
         {
