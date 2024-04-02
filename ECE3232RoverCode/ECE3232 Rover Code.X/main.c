@@ -153,7 +153,9 @@ void main(void) {
         }
         if (expected_pcls_info_response(pcls_info_response))
         {
-            // do PCLS STUFF
+            shield_code_flag=pcls_info_response[10];
+            repair_code_flag=pcls_info_response[11];
+            if(repair_code_flag)
         }
         else if (unknown_message(pcls_info_response))
         {
@@ -169,17 +171,17 @@ void main(void) {
         }
         if (expected_user_info_response(user_data_response))
         {
-            left_y = user_data_response[11]<<8 | user_data_response[10];
+            right_y = user_data_response[9]<<8 | user_data_response[8];
                         
-            if (left_y > 1500)
+            if (right_y > 1500)
             {
-                motor_pwm = 100.0*(left_y-1500.0)/500.0;
+                motor_pwm = 100.0*(right_y-1500.0)/500.0;
                 motor_a_direction = 1;  //both motors forward
                 motor_b_direction = 1;
             }
-            else if (left_y < 1500)
+            else if (right_y < 1500)
             {
-                motor_pwm = 100.0*(1500.0-left_y)/500.0;
+                motor_pwm = 100.0*(1500.0-right_y)/500.0;
                 motor_a_direction = 2; //both motors backwards
                 motor_b_direction = 2;
             }
@@ -188,8 +190,22 @@ void main(void) {
                 motor_a_direction = 0; //break both motors
                 motor_b_direction = 0;
             }
+
+          left_y = user_data_response[11]<<8 | user_data_response[10]; //pitch
+                        
+           pitch=left_y/10; //convert 
+
+
+        left_x = user_data_response[13]<<8 | user_data_response[12]; //yaw
+           yaw=left_x/10; //convert to frequency for servo 
+           
+        
+            
+
+         
             
             set_motor_settings(motor_a_direction, (char)motor_pwm, motor_b_direction, (char)motor_pwm);
+            set_servo_pulse(pitch, yaw, 0, 0);
         }
         else if (unknown_message(user_data_response))
         {
