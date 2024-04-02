@@ -1,16 +1,16 @@
 
+
 // This is a guard condition so that contents of this file are not included
 // more than once.  
-#ifndef CONTROLLER_H
-#define	CONTROLLER_H
+#ifndef SETUP_H
+#define	SETUP_H
 
 #include <xc.h> // include processor files - each processor file is guarded.  
 
-void controller_rising_edge_interrupt(int* timer_status, int* channel, int* PPM_complete, int* PPM_channels);
-void controller_main(int* PPM_complete, int* channel, int* timer_status);
-int controller_normalize(int PPM_rollover);
+void setup();
 
-#endif
+#endif 
+
 
 #ifdef	__cplusplus
 extern "C" {
@@ -22,3 +22,5 @@ extern "C" {
 #ifdef	__cplusplus
 }
 #endif /* __cplusplus */
+
+#endif	/* XC_HEADER_TEMPLATE_H */
