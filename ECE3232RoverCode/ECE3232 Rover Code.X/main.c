@@ -76,17 +76,12 @@ char user_data_response[26] = { 0 };
 
 int adc_data_bus = 0;
 
-int receive_finished_flag = 0;
-int delay_counter = 0;
-
 bool valid_response;
 
-void wait_for_receiver(void);
 
 void __interrupt() ISR() {
     if (PIR3bits.RCIF == 1 && PIE3bits.RCIE == 1) {
 
-        delay_counter = 0;
         if (RC1STAbits.OERR == 1 || RC1STAbits.FERR == 1)   // if overflow or framing error occur 
         {
             rx_data[rx_data_pointer] = RC1REG;
