@@ -1,5 +1,8 @@
 #include <xc.h> //CONFIG
-#define _XTAL_FREQ 32000000 //32,000,000 HZ internal clock (32MHz)
+#pragma config FEXTOSC = OFF    // External Oscillator mode selection bits (Oscillator not enabled)
+#pragma config RSTOSC = HFINT32  // Power-up default value for COSC bits (HFINTOSC (1MHz))
+#pragma config WDTE = OFF       // WDT operating mode (WDT Disabled, SWDTEN is ignored)
+#define _XTAL_FREQ 1000000 //1,000,000 HZ internal clock (1MHz)
 
 
 //So this function takes in a direction (0 or 1) for left and right respectively
@@ -11,14 +14,14 @@
 
 
 volatile int state = 1;
-volatile int direction = 0; //0 makes it turn left, 1 makes it turn right
+volatile int direction = 1; //0 makes it turn left, 1 makes it turn right
 volatile int rotations = 2; //number of full rotations
 volatile int currstates = 0;
-volatile int microrotations = 0.0; //number of full rotations(512 * rotations)
+volatile int microrotations = 450; //number of microsteps to go from up->down or vise versa
 
 
-void main(direction, rotations) {
-    microrotations = (512 * rotations);
+void main() {
+    //microrotations = (512 * rotations);  //This is to convert rotations to microrotations
     if (currstates >= (microrotations)){
             LATBbits.LATB0=0; //set pin 1 low
             LATBbits.LATB1=0; //set pin 2 low
@@ -37,93 +40,103 @@ void main(direction, rotations) {
     TRISBbits.TRISB3 =0; //configures pin 4 stepper output
     ANSELBbits.ANSB3 =0;
     
-       
-    while (currstates <= (microrotations)) {
-     
-        switch (state) {
-        case 1:
-            LATBbits.LATB0=1; //set pin 1 high
-            LATBbits.LATB1=1; //set pin 2 high
-            LATBbits.LATB2=1; //set pin 3 high
-            LATBbits.LATB3=0; //set pin 4 low
-            break;
-        case 2:
-            LATBbits.LATB0=1; //set pin 1 high
-            LATBbits.LATB1=1; //set pin 2 high
-            LATBbits.LATB2=0; //set pin 3 low
-            LATBbits.LATB3=0; //set pin 4 low
-            break;
-        case 3:
-            LATBbits.LATB0=1; //set pin 1 high
-            LATBbits.LATB1=1; //set pin 2 high
-            LATBbits.LATB2=0; //set pin 3 low
-            LATBbits.LATB3=1; //set pin 4 high
-            break;
-        case 4:
-            LATBbits.LATB0=1; //set pin 1 high
-            LATBbits.LATB1=0; //set pin 2 low
-            LATBbits.LATB2=0; //set pin 3 low
-            LATBbits.LATB3=1; //set pin 4 high
-            break;
-        case 5:
-            LATBbits.LATB0=1; //set pin 1 high
-            LATBbits.LATB1=0; //set pin 2 low
-            LATBbits.LATB2=1; //set pin 3 high
-            LATBbits.LATB3=1; //set pin 4 high
-            break;
-        case 6:
-            LATBbits.LATB0=0; //set pin 1 low
-            LATBbits.LATB1=0; //set pin 2 low
-            LATBbits.LATB2=1; //set pin 3 high
-            LATBbits.LATB3=1; //set pin 4 high
-            break;
-        case 7:
-            LATBbits.LATB0=0; //set pin 1 low
-            LATBbits.LATB1=1; //set pin 2 high
-            LATBbits.LATB2=1; //set pin 3 high
-            LATBbits.LATB3=1; //set pin 4 high
-            break;
-        case 8:
-            LATBbits.LATB0=0; //set pin 1 low
-            LATBbits.LATB1=1; //set pin 2 high
-            LATBbits.LATB2=1; //set pin 3 high
-            LATBbits.LATB3=0; //set pin 4 low
-            break;
-        default:
-            LATBbits.LATB0=0; //set pin 1 low
-            LATBbits.LATB1=0; //set pin 2 low
-            LATBbits.LATB2=0; //set pin 3 low
-            LATBbits.LATB3=0; //set pin 4 low
-            state =1;
-            break;
-    }
-    if (direction == 0){ //checks direction (0 for forward)
-        if (state >= 8){
-            state = 1; 
-            currstates ++;
-        } else{
-            state++;
-        }
-    } else {               //any other state is backwards
-        if (state == 1){
-            state = 8;
-            currstates ++;
-        } else {
-            state --;
-        }
-    }
-        if (currstates >= (microrotations)){
-            LATBbits.LATB0=0; //set pin 1 low
-            LATBbits.LATB1=0; //set pin 2 low
-            LATBbits.LATB2=0; //set pin 3 low
-            LATBbits.LATB3=0; //set pin 4 low
-            break;
-        }
-      
-    __delay_ms(1); //state interval (speed) any more than 1 ms makes motor stall
     
+        while (currstates <= (microrotations)) {
+
+            switch (state) {
+            case 1:
+                LATBbits.LATB0=1; //set pin 1 high
+                LATBbits.LATB1=1; //set pin 2 high
+                LATBbits.LATB2=1; //set pin 3 high
+                LATBbits.LATB3=0; //set pin 4 low
+                break;
+            case 2:
+                LATBbits.LATB0=1; //set pin 1 high
+                LATBbits.LATB1=1; //set pin 2 high
+                LATBbits.LATB2=0; //set pin 3 low
+                LATBbits.LATB3=0; //set pin 4 low
+                break;
+            case 3:
+                LATBbits.LATB0=1; //set pin 1 high
+                LATBbits.LATB1=1; //set pin 2 high
+                LATBbits.LATB2=0; //set pin 3 low
+                LATBbits.LATB3=1; //set pin 4 high
+                break;
+            case 4:
+                LATBbits.LATB0=1; //set pin 1 high
+                LATBbits.LATB1=0; //set pin 2 low
+                LATBbits.LATB2=0; //set pin 3 low
+                LATBbits.LATB3=1; //set pin 4 high
+                break;
+            case 5:
+                LATBbits.LATB0=1; //set pin 1 high
+                LATBbits.LATB1=0; //set pin 2 low
+                LATBbits.LATB2=1; //set pin 3 high
+                LATBbits.LATB3=1; //set pin 4 high
+                break;
+            case 6:
+                LATBbits.LATB0=0; //set pin 1 low
+                LATBbits.LATB1=0; //set pin 2 low
+                LATBbits.LATB2=1; //set pin 3 high
+                LATBbits.LATB3=1; //set pin 4 high
+                break;
+            case 7:
+                LATBbits.LATB0=0; //set pin 1 low
+                LATBbits.LATB1=1; //set pin 2 high
+                LATBbits.LATB2=1; //set pin 3 high
+                LATBbits.LATB3=1; //set pin 4 high
+                break;
+            case 8:
+                LATBbits.LATB0=0; //set pin 1 low
+                LATBbits.LATB1=1; //set pin 2 high
+                LATBbits.LATB2=1; //set pin 3 high
+                LATBbits.LATB3=0; //set pin 4 low
+                break;
+            default:
+                LATBbits.LATB0=0; //set pin 1 low
+                LATBbits.LATB1=0; //set pin 2 low
+                LATBbits.LATB2=0; //set pin 3 low
+                LATBbits.LATB3=0; //set pin 4 low
+                state =1;
+                break;
+        }
+        if (direction == 0){ //checks direction (0 for forward)
+            if (state >= 8){
+                state = 1; 
+                currstates ++;
+            } else{
+                state++;
+            }
+        } else {               //any other state is backwards
+            if (state == 1){
+                state = 8;
+                currstates ++;
+            } else {
+                state --;
+            }
+        }
+            if (currstates >= (microrotations)){
+                LATBbits.LATB0=0; //set pin 1 low
+                LATBbits.LATB1=0; //set pin 2 low
+                LATBbits.LATB2=0; //set pin 3 low
+                LATBbits.LATB3=0; //set pin 4 low
+                break;
+            }
+
+        __delay_ms(1); //state interval (speed) any more than 1 ms makes motor stall
+
    
 }
-    __delay_ms(1000);
+    //__delay_ms(1500);   //delay and reverse for next run (this is for testing standalone)
+    
+    
+    if (direction == 0){ //
+        direction = 1;
+    } else {
+    
+        direction =0;
+    }
+    currstates = 0;
+ 
     return;
 }
