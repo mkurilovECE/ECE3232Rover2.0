@@ -1,4 +1,3 @@
-
 /*
  * File:   setup.c
  * Author: Declan
@@ -38,6 +37,27 @@ void setup(void) {
     TRISCbits.TRISC6 = 1;
     RXPPS = 0x16;                  // set RX pin to RC6 I/O pin;
 
+    //ADC
+    TRISAbits.TRISA0 = 1;           //RA0 is input
+    ANSELAbits.ANSA0 = 1;           //RA0 is analog
+
+    ADCLKbits.ADCCS = 0b111111;     // set Fosc/128 ADC Clock Source
+
+    ADREFbits.ADPREF = 0b00;        // set Vdd as positive voltage ref
+    ADREFbits.ADNREF = 0;           // set AVss as positive voltage ref
+
+    ADPCHbits.ADPCH = 0;            // set the positive ADC channel to RA0 pin
+
+    ADCON0bits.ADON = 1;            // turn on ADC module
+
+    ADACQ = 1;                      // set ADACQ to 1 clock of the selected ADC clock
+    ADCON0bits.ADGO = 1;            // start ADC
+
+    ADCON0bits.ADFRM0 = 1;          // make the data storage right-justified
+
+    TRISAbits.TRISA1 = 0;           // set LED3-5 to outputs
+    TRISAbits.TRISA2 = 0;
+    TRISAbits.TRISA3 = 0;
 
     //Interrupts
     PIR0bits.IOCIF = 0;             //clear interrupt on change interrupt flag
@@ -49,8 +69,12 @@ void setup(void) {
     PIE3bits.RCIE = 1;              //enable USART receive interrupt
     PIE3bits.TXIE = 1;              //enable USART transmit interrupt
 
+    PIR1bits.ADIF = 0;              // clear ADC Interrupt Flag
+    PIE1bits.ADIE = 1;              // enable ADC Interrupt
+
     INTCONbits.GIE = 1;             //enable global interrupts
     INTCONbits.PEIE = 1;            //enable peripheral interrupts
 
     return;
 }
+

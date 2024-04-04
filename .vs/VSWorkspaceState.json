@@ -1,7 +1,9 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\ECE3232RoverCode",
+    "\\ECE3232RoverCode\\ECE3232 Rover Code.X"
   ],
-  "SelectedNode": "\\C:\\Users\\kuril\\Source\\Repos\\ECE3232Rover2.0",
+  "SelectedNode": "\\ECE3232RoverCode\\ECE3232 Rover Code.X\\uart.h",
   "PreviewInSolutionExplorer": false
 }

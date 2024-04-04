@@ -17,11 +17,11 @@
 
 #include <xc.h>
 #include <stdbool.h>
+#include<stdio.h>
 #include "controller.h"
 #include "UART.h"
 #include "setup.h"
 #include "PCLS.h"
-#include "conductivity.h"
 
  // CONFIG1
 #pragma config FEXTOSC = ECH    // External Oscillator mode selection bits (EC above 8MHz; PFM set to high power)
@@ -81,8 +81,30 @@ int delay_counter = 0;
 
 bool valid_response;
 
-void wait_for_receiver(void);
+typedef enum { MODE_A, MODE_B, MODE_C, MODE_D } switchC_mode_type;
+typedef enum { MODE_Disable, MODE_Repair, MODE_Ore, MODE_Conductivity, MODE_FFT } laser_mode_type;
 
+switchC_mode_type switchC_mode = MODE_B;        //set switch C to ore type by default
+laser_mode_type laser_mode = MODE_Disable;      // set laser to assault by default
+
+int potA = 0;
+int potB = 0;
+int prev_potA = 0;
+int prev_potB = 0;
+
+int switch_C = 0;
+int switch_D = 0;
+int prev_switchC = 0;
+
+char ore_type = 0;
+char conductivity_zone_number = 0;
+int fft_frequency = 0;
+char fft_frequency_lsb = 0;
+char fft_frequency_msb = 0;
+
+char repair_code_flag = 0;
+char shield_code_flag = 0;
+char repair_code = 0;
 void __interrupt() ISR() {
     if (PIR3bits.RCIF == 1 && PIE3bits.RCIE == 1) {
 
@@ -106,17 +128,17 @@ void __interrupt() ISR() {
             rx_data_pointer = 0;
         }
     }
-    if (IOCCFbits.IOCCF7 == 1) {
-        IOCCFbits.IOCCF7 = 0;       //clear interrupt flag
+    //if (IOCCFbits.IOCCF7 == 1){
+    //    IOCCFbits.IOCCF7 = 0;       //clear interrupt flag
 
-        controller_rising_edge_interrupt(&timer_status, &channel, &PPM_complete, &PPM_channels);
-    }
-    if (PIR0bits.TMR0IF == 1) {
-        PIR0bits.TMR0IF = 0;        //clear interrupt flag
+    //    controller_rising_edge_interrupt(&timer_status, &channel, &PPM_complete, &PPM_channels);
+    //}
+    //if (PIR0bits.TMR0IF == 1) {
+    //    PIR0bits.TMR0IF = 0;        //clear interrupt flag
 
-        PPM_rollovers[channel]++;   //increment channel interrupt counter
-        PPM_rollovers[0]++;         //increment total interrupt counter
-    }
+    //    PPM_rollovers[channel]++;   //increment channel interrupt counter
+    //    PPM_rollovers[0]++;         //increment total interrupt counter
+    //}
     if (PIR3bits.TXIF == 1 && PIE3bits.TXIE == 1)
     {
         PIE3bits.TXIE = 0;          // stop transmission until the transmitter flag is up
@@ -127,10 +149,24 @@ void __interrupt() ISR() {
         adc_data_bus = 0;
         adc_data_bus = adc_data_bus | ADRESH;
         adc_data_bus = adc_data_bus << 8;
-        adc_data_bus = adc_data_bus | adc_data_bus;
+        adc_data_bus = adc_data_bus | ADRESL;
 
         PIR1bits.ADIF = 0;
-        ADCON0bits.ADGO = 0;
+        ADCON0bits.ADGO = 1;
+
+        if (adc_data_bus > 0x0230)      // if voltage at RA0 > 1.805V, turn all LEDs on
+        {
+            LATAbits.LATA1 = 1;
+            LATAbits.LATA2 = 1;
+            LATAbits.LATA3 = 1;
+        }
+        else
+        {
+            LATAbits.LATA1 = 0;     // if less, turn all LEDs off
+            LATAbits.LATA2 = 0;
+            LATAbits.LATA3 = 0;
+
+        }
     }
 
     return;
@@ -143,9 +179,9 @@ void main(void) {
 
     while (1) {
         //controller_main(&PPM_complete, &channel, &timer_status);
-        //for (int i = 0; i <= PPM_CHANNEL_QUANTITY_PLUS_ONE; i++){
-        //    controller_states[i] = controller_normalize(PPM_rollovers[i]);
-        //    PPM_rollovers[i] = 0;
+        //for (int k = 0; k <= PPM_CHANNEL_QUANTITY_PLUS_ONE; k++){
+        //    controller_states[k] = controller_normalize(PPM_rollovers[k]);
+        //    PPM_rollovers[k] = 0;
         //}
 
         get_pcls_info();
@@ -158,11 +194,8 @@ void main(void) {
         }
         if (expected_pcls_info_response(pcls_info_response))
         {
-            // do PCLS STUFF
-        }
-        else if (unknown_message(pcls_info_response))
-        {
-            // UKNOWN COMMAND DETECTED
+            shield_code_flag = pcls_info_response[10];
+            repair_code_flag = pcls_info_response[11];
         }
 
         get_user_data();
@@ -174,30 +207,210 @@ void main(void) {
         }
         if (expected_user_info_response(user_data_response))
         {
-            // do USER DATA STUFF
-        }
-        else if (unknown_message(user_data_response))
-        {
-            // UKNOWN COMMAND DETECTED
-        }
+            // 1. copy the old controls
+            // 2. get the new controls
+            // 3. call wheel control
+            // 4. call laser control
+            // 5. detect the switch C mode and process the input based on that
+            // 6. detect the laser mode and shoot the appropriate laser
 
-        conductivity_test();
-        if (adc_data_bus > 0x0230)      // if voltage at RA0 > 1.805V, turn all LEDs on
-        {
-            LATAbits.LATA1 = 1;
-            LATAbits.LATA2 = 1;
-            LATAbits.LATA3 = 1;
-        }
-        else
-        {
-            LATAbits.LATA1 = 0;     // if less, turn all LEDs off
-            LATAbits.LATA2 = 0;
-            LATAbits.LATA3 = 0;
+            prev_potA = potA;   //1. copy the old controls
+            prev_potB = potB;
+            prev_switchC = switch_C;
+
+
+            potA = user_data_response[23] << 8 | user_data_response[22];  // 2. get new controls
+            potB = user_data_response[25] << 8 | user_data_response[24];
+            switch_C = user_data_response[19] << 8 | user_data_response[18];
+            switch_D = user_data_response[21] << 8 | user_data_response[20];
+
+            // 3. call wheel control
+            // 4. call laser control
+
+
+
+
+            //6. detect the switch C mode and process the input based on that
+            if (prev_potA != potA)
+            {
+                if (potA < 1250)
+                {
+                    switchC_mode = MODE_A;
+                }
+                else if (potA >= 1250 && potA < 1500)
+                {
+                    switchC_mode = MODE_B;
+                }
+                else if (potA >= 1500 && potA < 1750)
+                {
+                    switchC_mode = MODE_C;
+                }
+                else
+                {
+                    switchC_mode = MODE_D;
+                }
+            }
+
+            switch (switchC_mode)
+            {
+                //case MODE_A:
+                    // water pump code
+                    //decide on the parameters sent into the water pump function
+                    // have to decide if the pump sucks in until a trigger or how is it getting stopped
+                //    if (switch_C < 1300) 
+                //    {
+                //        //intake water
+                //    }
+                //    else if (switch_C >= 1300 && switch_C < 1700) {
+                        //off
+                //    }
+                //    else{
+                //        // expel water
+                //    }
+                    // right now this code will call the pump every time the switch is checked
+                    // call the function with the parameters
+                //    break;
+            case MODE_B:
+                // color processing code
+                // decide on the color of the ore
+                if (switch_C < 1300)
+                {
+                    ore_type = 1;   //solar (red)
+                }
+                else if (switch_C >= 1300 && switch_C < 1700) {
+
+                    ore_type = 2;  // aurorium (yellow)
+                }
+                else {
+                    ore_type = 3;   //cobalite (blue)
+                }
+
+                // send the command with the selected ore type
+                break;
+
+            case MODE_C:
+                // conductivity test
+                //decide on the number sent into the zone
+                if (prev_switchC != switch_C) // change the number if the switch is in a different position
+                {
+                    if (switch_C < 1300)
+                    {
+                        conductivity_zone_number++;   //solar (red)
+                    }
+                    else if (switch_C > 1700) {
+                        conductivity_zone_number--;
+                    }
+                    // if the switch is in the middle position, do not change the zone number
+                }
+                break;
+                //case MODE_D:
+                    // alien frequency test
+                //    if (prev_switchC != switch_C) // change the number if the switch is in a different position
+                //    {
+
+                    // if the switch is in the middle position, do not change the zone number
+                //    }
+                //   break;
+
+            default:
+                break;
+            }
+            // 7. detect the laser mode and shoot the appropriate laser
+            // we still need to decide how we are receiving shield and repair codes
+            if (prev_potB != potB)
+            {
+                if (potB < 1200)
+                {
+                    laser_mode = MODE_Disable;
+                }
+                else if (potB >= 1200 && potB < 1400)
+                {
+                    laser_mode = MODE_Repair;
+                }
+                else if (potB >= 1400 && potB < 1600)
+                {
+                    laser_mode = MODE_Ore;
+                }
+                else if (potB >= 1600 && potB < 1800)
+                {
+                    laser_mode = MODE_Conductivity;
+                }
+                else
+                {
+                    laser_mode = MODE_FFT;
+                }
+            }
+
+            // turn the laser on/off
+
+            if (switch_D > 1500) set_laser_scope(0x01);
+            else set_laser_scope(0x00);
+
+            //transmit an appropriate laser based on the selected laser type 
+            switch (laser_mode)
+            {
+            case MODE_Disable:
+                // shoot an assault laser
+                if (switch_D > 1500)
+                {
+                    shoot_laser(0x02);      // shoot a high caliber
+                }
+                break;
+            case MODE_Repair:
+                if (switch_D > 1500)
+                {
+                    repair_code_flag = pcls_info_response[11];
+                    if (repair_code_flag != 0)
+                    {
+                        // get the repair code 
+                        //transmit the repair code
+                        transmit_repair_code(repair_code);
+                    }
+                    else
+                    {
+                        request_repair_code();
+                    }
+                }
+                break;
+            case MODE_Ore:
+                if (switch_D > 1500)
+                {
+                    processing_plant_ore_type(ore_type);
+                }
+                break;
+            case MODE_Conductivity:
+
+                if (switch_D > 1500)
+                {
+                    surface_exploration(0x04, 0x00, conductivity_zone_number, 0x00);
+                }
+                break;
+            case MODE_FFT:
+                // this should be the frequency we get from the FFT task
+                fft_frequency_lsb = fft_frequency & 0XFF;
+                fft_frequency_msb = (fft_frequency & 0XFF00) >> 8;
+                if (switch_D > 1500)
+                {
+                    surface_exploration(0x02, 0x00, fft_frequency_lsb, fft_frequency_msb);
+                }
+                break;
+            default:
+                break;
+
+
+            }
         }
 
 
     }
 
-
     return;
 }
+
+
+
+
+
+
+
+
