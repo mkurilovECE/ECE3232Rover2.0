@@ -1,8 +1,5 @@
 #include <xc.h> //CONFIG
-#pragma config FEXTOSC = OFF    // External Oscillator mode selection bits (Oscillator not enabled)
-#pragma config RSTOSC = HFINT1  // Power-up default value for COSC bits (HFINTOSC (1MHz))
-#pragma config WDTE = OFF       // WDT operating mode (WDT Disabled, SWDTEN is ignored)
-#define _XTAL_FREQ 1000000 //1,000,000 HZ internal clock (1MHz)
+#define _XTAL_FREQ 32000000 //32,000,000 HZ internal clock (32MHz)
 
 
 //So this function takes in a direction (0 or 1) for left and right respectively
