@@ -76,9 +76,6 @@ char user_data_response[26] = { 0 };
 
 int adc_data_bus = 0;
 
-int receive_finished_flag = 0;
-int delay_counter = 0;
-
 bool valid_response;
 
 typedef enum { MODE_A, MODE_B, MODE_C, MODE_D } switchC_mode_type;
@@ -108,7 +105,6 @@ char repair_code = 0;
 void __interrupt() ISR() {
     if (PIR3bits.RCIF == 1 && PIE3bits.RCIE == 1) {
 
-        delay_counter = 0;
         if (RC1STAbits.OERR == 1 || RC1STAbits.FERR == 1)   // if overflow or framing error occur 
         {
             rx_data[rx_data_pointer] = RC1REG;
@@ -194,8 +190,12 @@ void main(void) {
         }
         if (expected_pcls_info_response(pcls_info_response))
         {
-            shield_code_flag = pcls_info_response[10];
-            repair_code_flag = pcls_info_response[11];
+            shield_code_flag=pcls_info_response[10];
+            repair_code_flag=pcls_info_response[11];
+        }
+        else if (unknown_message(pcls_info_response))
+        {
+            // UKNOWN COMMAND DETECTED
         }
 
         get_user_data();

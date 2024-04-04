@@ -27,79 +27,79 @@ void pump_stepper_function(void) {
     }
     TRISBbits.TRISB0 = 0; //configures pin 1 stepper output
     ANSELBbits.ANSB0 = 0;
-
+    
     TRISBbits.TRISB1 = 0; //configures pin 2 stepper output
     ANSELBbits.ANSB1 = 0;
-
+    
     TRISBbits.TRISB2 = 0; //configures pin 3 stepper output
     ANSELBbits.ANSB2 = 0;
-
+    
     TRISBbits.TRISB3 = 0; //configures pin 4 stepper output
     ANSELBbits.ANSB3 = 0;
+    
+    
+        while (currstates <= (microrotations)) {
 
-
-    while (currstates <= (microrotations)) {
-
-        switch (state) {
-        case 1:
+            switch (state) {
+            case 1:
             LATBbits.LATB0 = 1; //set pin 1 high
             LATBbits.LATB1 = 1; //set pin 2 high
             LATBbits.LATB2 = 1; //set pin 3 high
             LATBbits.LATB3 = 0; //set pin 4 low
-            break;
-        case 2:
+                break;
+            case 2:
             LATBbits.LATB0 = 1; //set pin 1 high
             LATBbits.LATB1 = 1; //set pin 2 high
             LATBbits.LATB2 = 0; //set pin 3 low
             LATBbits.LATB3 = 0; //set pin 4 low
-            break;
-        case 3:
+                break;
+            case 3:
             LATBbits.LATB0 = 1; //set pin 1 high
             LATBbits.LATB1 = 1; //set pin 2 high
             LATBbits.LATB2 = 0; //set pin 3 low
             LATBbits.LATB3 = 1; //set pin 4 high
-            break;
-        case 4:
+                break;
+            case 4:
             LATBbits.LATB0 = 1; //set pin 1 high
             LATBbits.LATB1 = 0; //set pin 2 low
             LATBbits.LATB2 = 0; //set pin 3 low
             LATBbits.LATB3 = 1; //set pin 4 high
-            break;
-        case 5:
+                break;
+            case 5:
             LATBbits.LATB0 = 1; //set pin 1 high
             LATBbits.LATB1 = 0; //set pin 2 low
             LATBbits.LATB2 = 1; //set pin 3 high
             LATBbits.LATB3 = 1; //set pin 4 high
-            break;
-        case 6:
+                break;
+            case 6:
             LATBbits.LATB0 = 0; //set pin 1 low
             LATBbits.LATB1 = 0; //set pin 2 low
             LATBbits.LATB2 = 1; //set pin 3 high
             LATBbits.LATB3 = 1; //set pin 4 high
-            break;
-        case 7:
+                break;
+            case 7:
             LATBbits.LATB0 = 0; //set pin 1 low
             LATBbits.LATB1 = 1; //set pin 2 high
             LATBbits.LATB2 = 1; //set pin 3 high
             LATBbits.LATB3 = 1; //set pin 4 high
-            break;
-        case 8:
+                break;
+            case 8:
             LATBbits.LATB0 = 0; //set pin 1 low
             LATBbits.LATB1 = 1; //set pin 2 high
             LATBbits.LATB2 = 1; //set pin 3 high
             LATBbits.LATB3 = 0; //set pin 4 low
-            break;
-        default:
+                break;
+            default:
             LATBbits.LATB0 = 0; //set pin 1 low
             LATBbits.LATB1 = 0; //set pin 2 low
             LATBbits.LATB2 = 0; //set pin 3 low
             LATBbits.LATB3 = 0; //set pin 4 low
             state = 1;
-            break;
+                break;
         }
         if (direction == 0) { //checks direction (0 for forward)
             if (state >= 8) {
-                state = 1;
+                state = 1; 
                 currstates++;
             }
             else {
@@ -120,12 +120,21 @@ void pump_stepper_function(void) {
             LATBbits.LATB1 = 0; //set pin 2 low
             LATBbits.LATB2 = 0; //set pin 3 low
             LATBbits.LATB3 = 0; //set pin 4 low
-            break;
-        }
+                break;
+            }
 
         __delay_ms(1); //state interval (speed) any more than 1 ms makes motor stall
 
-
+   
+}
+    //__delay_ms(1500);   //delay and reverse for next run (this is for testing standalone)
+    
+    
+    if (direction == 0){ //
+        direction = 1;
+    } else {
+    
+        direction =0;
     }
     __delay_ms(1000);
     return;
