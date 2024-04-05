@@ -21,13 +21,13 @@
 
 int motorvectorleft(int powervec, int steeringvec) {
     int outleft = 0;
-    if (0 <= powervec <= 100 && 0 <= steeringvec <= 100){  //makes sure both values are in range (doesn't do anything if they aren't)
-        if (steeringvec >> 50){ // this is for right turns
+    if (0 <= powervec && powervec <= 100 && 0 <= steeringvec && steeringvec <= 100){  //makes sure both values are in range (doesn't do anything if they aren't)
+        if (steeringvec > 50){ // this is for right turns
         
             outleft = (powervec/50) * (100 - steeringvec) * 2; //scales the left motor to go from full speed at center to stopped at far right
             
             
-        } else if(steeringvec << 50){ //this is for left turns
+        } else if(steeringvec < 50){ //this is for left turns
         
             outleft = (powervec/50) * (steeringvec) * 2;
          
@@ -44,11 +44,11 @@ int motorvectorleft(int powervec, int steeringvec) {
 int motorvectorright(int powervec, int steeringvec) {
     int outright =0;
     if (0 <= powervec && powervec <= 100 && 0 <= steeringvec && steeringvec <= 100){  //makes sure both values are in range (doesn't do anything if they aren't)
-        if (steeringvec >> 50){ // this is for right turns
+        if (steeringvec > 50){ // this is for right turns
       
             outright = (powervec/50) * (steeringvec) *2;
             
-        } else if(steeringvec << 50){ //this is for left turns
+        } else if(steeringvec < 50){ //this is for left turns
         
            
             outright = (powervec/50) * (100 - steeringvec) *2;
