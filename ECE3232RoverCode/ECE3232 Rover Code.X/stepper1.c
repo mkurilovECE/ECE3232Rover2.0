@@ -12,7 +12,7 @@
 //got through the 8 state process 512 times to make a full rotation.
 
 
-void pump_stepper_function(bool position) {
+void paddle_stepper_function(bool position) {
 
     int state = 1;
     int direction = position; //0 makes it turn left, 1 makes it turn right
@@ -122,6 +122,137 @@ void pump_stepper_function(bool position) {
             LATBbits.LATB1 = 0; //set pin 2 low
             LATBbits.LATB2 = 0; //set pin 3 low
             LATBbits.LATB3 = 0; //set pin 4 low
+            break;
+        }
+
+        __delay_ms(1); //state interval (speed) any more than 1 ms makes motor stall
+
+
+    }
+    //__delay_ms(1500);   //delay and reverse for next run (this is for testing standalone)
+    
+    
+  //  if (direction == 0){ // this was for if
+  //      direction = 1;
+  //  } else {
+    
+  //      direction =0;
+  //  }
+  //  currstates = 0;
+ 
+    return;
+}
+
+void pump_stepper_function(bool position) {
+
+    int state = 1;
+    int direction = position; //0 makes it turn left, 1 makes it turn right
+    int rotations = 2; //number of full rotations
+    int currstates = 0;
+    int microrotations = 0;
+
+    microrotations = (850); //850 is what was found to be needed for a full range operation
+    if (currstates >= (microrotations)) {
+        LATBbits.LATB0 = 0; //set pin 1 low
+        LATBbits.LATB1 = 0; //set pin 2 low
+        LATBbits.LATB2 = 0; //set pin 3 low
+        LATBbits.LATB3 = 0; //set pin 4 low
+    }
+    TRISBbits.TRISB4 = 0; //configures pin 1 stepper output
+    ANSELBbits.ANSB4 = 0;
+
+    TRISBbits.TRISB5 = 0; //configures pin 2 stepper output
+    ANSELBbits.ANSB5 = 0;
+
+    TRISBbits.TRISB6 = 0; //configures pin 3 stepper output
+    ANSELBbits.ANSB6 = 0;
+
+    TRISBbits.TRISB7 = 0; //configures pin 4 stepper output
+    ANSELBbits.ANSB7 = 0;
+
+
+    while (currstates <= (microrotations)) {
+
+        switch (state) {
+        case 1:
+            LATBbits.LATB4 = 1; //set pin 1 high
+            LATBbits.LATB5 = 1; //set pin 2 high
+            LATBbits.LATB6 = 1; //set pin 3 high
+            LATBbits.LATB7 = 0; //set pin 4 low
+            break;
+        case 2:
+            LATBbits.LATB4 = 1; //set pin 1 high
+            LATBbits.LATB5 = 1; //set pin 2 high
+            LATBbits.LATB6 = 0; //set pin 3 low
+            LATBbits.LATB7 = 0; //set pin 4 low
+            break;
+        case 3:
+            LATBbits.LATB4 = 1; //set pin 1 high
+            LATBbits.LATB5 = 1; //set pin 2 high
+            LATBbits.LATB6 = 0; //set pin 3 low
+            LATBbits.LATB7 = 1; //set pin 4 high
+            break;
+        case 4:
+            LATBbits.LATB4 = 1; //set pin 1 high
+            LATBbits.LATB5 = 0; //set pin 2 low
+            LATBbits.LATB6 = 0; //set pin 3 low
+            LATBbits.LATB7 = 1; //set pin 4 high
+            break;
+        case 5:
+            LATBbits.LATB4 = 1; //set pin 1 high
+            LATBbits.LATB5 = 0; //set pin 2 low
+            LATBbits.LATB6 = 1; //set pin 3 high
+            LATBbits.LATB7 = 1; //set pin 4 high
+            break;
+        case 6:
+            LATBbits.LATB4 = 0; //set pin 1 low
+            LATBbits.LATB5 = 0; //set pin 2 low
+            LATBbits.LATB6 = 1; //set pin 3 high
+            LATBbits.LATB7 = 1; //set pin 4 high
+            break;
+        case 7:
+            LATBbits.LATB4 = 0; //set pin 1 low
+            LATBbits.LATB5 = 1; //set pin 2 high
+            LATBbits.LATB6 = 1; //set pin 3 high
+            LATBbits.LATB7 = 1; //set pin 4 high
+            break;
+        case 8:
+            LATBbits.LATB4 = 0; //set pin 1 low
+            LATBbits.LATB5 = 1; //set pin 2 high
+            LATBbits.LATB6 = 1; //set pin 3 high
+            LATBbits.LATB7 = 0; //set pin 4 low
+            break;
+        default:
+            LATBbits.LATB4 = 0; //set pin 1 low
+            LATBbits.LATB5 = 0; //set pin 2 low
+            LATBbits.LATB6 = 0; //set pin 3 low
+            LATBbits.LATB7 = 0; //set pin 4 low
+            state = 1;
+            break;
+        }
+        if (direction == 0) { //checks direction (0 for forward)
+            if (state >= 8) {
+                state = 1;
+                currstates++;
+            }
+            else {
+                state++;
+            }
+        }
+        else {               //any other state is backwards
+            if (state == 1) {
+                state = 8;
+                currstates++;
+            }
+            else {
+                state--;
+            }
+        }
+        if (currstates >= (microrotations)) {
+            LATBbits.LATB4 = 0; //set pin 1 low
+            LATBbits.LATB5 = 0; //set pin 2 low
+            LATBbits.LATB6 = 0; //set pin 3 low
+            LATBbits.LATB7 = 0; //set pin 4 low
             break;
         }
 
