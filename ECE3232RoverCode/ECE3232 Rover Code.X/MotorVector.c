@@ -43,7 +43,7 @@ int motorvectorleft(int powervec, int steeringvec) {
 
 int motorvectorright(int powervec, int steeringvec) {
     int outright =0;
-    if (0 <= powervec <= 100 && 0 <= steeringvec <= 100){  //makes sure both values are in range (doesn't do anything if they aren't)
+    if (0 <= powervec && powervec <= 100 && 0 <= steeringvec && steeringvec <= 100){  //makes sure both values are in range (doesn't do anything if they aren't)
         if (steeringvec >> 50){ // this is for right turns
       
             outright = (powervec/50) * (steeringvec) *2;
