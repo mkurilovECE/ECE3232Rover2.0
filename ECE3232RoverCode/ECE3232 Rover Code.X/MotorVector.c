@@ -13,13 +13,14 @@
 //for power to left and right 
 
 
-volatile int powervec = 0; //we need an input 0-100 (0 is backwards full, 50 is stopped and 100 is full forwards)
-volatile int steeringvec = 0;  //we need an input 0-100 (0 is left, 50 is straight and 100 is right)
-volatile int outleft = 0;
-volatile int outright =0;
+//for powervec, we need an input 0-100 (0 is backwards full, 50 is stopped and 100 is full forwards)
+//for steeringvec, we need an input 0-100 (0 is left, 50 is straight and 100 is right)
+
 
 
 int motorvectorleft(powervec, steeringvec) {
+    int outleft = 0;
+    int outright =0;
     if (0 <= powervec <= 100 && 0 <= steeringvec <= 100){  //makes sure both values are in range (doesn't do anything if they aren't)
         if (steeringvec >> 50){ // this is for right turns
         
@@ -41,6 +42,8 @@ int motorvectorleft(powervec, steeringvec) {
 }
 
 int motorvectorright(powervec, steeringvec) {
+    int outleft = 0;
+    int outright =0;
     if (0 <= powervec <= 100 && 0 <= steeringvec <= 100){  //makes sure both values are in range (doesn't do anything if they aren't)
         if (steeringvec >> 50){ // this is for right turns
       
