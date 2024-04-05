@@ -1,4 +1,5 @@
 #include <xc.h> //CONFIG
+#include "stepper1.h"
 #define _XTAL_FREQ 32000000 //32,000,000 HZ internal clock (32MHz)
 
 
