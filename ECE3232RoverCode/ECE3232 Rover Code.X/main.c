@@ -22,6 +22,7 @@
 #include "UART.h"
 #include "setup.h"
 #include "PCLS.h"
+#include "MotorVector.h"
 
  // CONFIG1
 #pragma config FEXTOSC = ECH    // External Oscillator mode selection bits (EC above 8MHz; PFM set to high power)
@@ -76,6 +77,8 @@ char user_data_response[26] = { 0 };
 
 int adc_data_bus = 0;
 
+int receive_finished_flag = 0;
+
 bool valid_response;
 
 typedef enum { MODE_A, MODE_B, MODE_C, MODE_D } switchC_mode_type;
@@ -100,8 +103,9 @@ char fft_frequency_lsb = 0;
 char fft_frequency_msb = 0;
 
 char repair_code_flag = 0;
-char shield_code_flag = 0;
 char repair_code = 0;
+
+char shield_code_flag = 0;
 void __interrupt() ISR() {
     if (PIR3bits.RCIF == 1 && PIE3bits.RCIE == 1) {
 
@@ -181,7 +185,7 @@ void main(void) {
         //}
 
         get_pcls_info();
-        __delay_ms(3);
+        __delay_us(1000);
 
         for (int i = 11; i >= 0; i--) {
             pcls_info_response[i] = rx_data[i];
@@ -190,16 +194,12 @@ void main(void) {
         }
         if (expected_pcls_info_response(pcls_info_response))
         {
-            shield_code_flag=pcls_info_response[10];
-            repair_code_flag=pcls_info_response[11];
-        }
-        else if (unknown_message(pcls_info_response))
-        {
-            // UKNOWN COMMAND DETECTED
+            shield_code_flag = pcls_info_response[10];
+            repair_code_flag = pcls_info_response[11];
         }
 
         get_user_data();
-        __delay_ms(3);
+        __delay_us(2700);
         for (int p = 25; p >= 0; p--) {
             user_data_response[p] = rx_data[p];
             rx_data[p] = 0;
@@ -207,6 +207,7 @@ void main(void) {
         }
         if (expected_user_info_response(user_data_response))
         {
+
             // 1. copy the old controls
             // 2. get the new controls
             // 3. call wheel control
@@ -224,11 +225,9 @@ void main(void) {
             switch_C = user_data_response[19] << 8 | user_data_response[18];
             switch_D = user_data_response[21] << 8 | user_data_response[20];
 
+
             // 3. call wheel control
             // 4. call laser control
-
-
-
 
             //6. detect the switch C mode and process the input based on that
             if (prev_potA != potA)
@@ -253,24 +252,7 @@ void main(void) {
 
             switch (switchC_mode)
             {
-                //case MODE_A:
-                    // water pump code
-                    //decide on the parameters sent into the water pump function
-                    // have to decide if the pump sucks in until a trigger or how is it getting stopped
-                //    if (switch_C < 1300) 
-                //    {
-                //        //intake water
-                //    }
-                //    else if (switch_C >= 1300 && switch_C < 1700) {
-                        //off
-                //    }
-                //    else{
-                //        // expel water
-                //    }
-                    // right now this code will call the pump every time the switch is checked
-                    // call the function with the parameters
-                //    break;
-            case MODE_B:
+            case MODE_A:
                 // color processing code
                 // decide on the color of the ore
                 if (switch_C < 1300)
@@ -288,7 +270,7 @@ void main(void) {
                 // send the command with the selected ore type
                 break;
 
-            case MODE_C:
+            case MODE_B:
                 // conductivity test
                 //decide on the number sent into the zone
                 if (prev_switchC != switch_C) // change the number if the switch is in a different position
@@ -303,14 +285,21 @@ void main(void) {
                     // if the switch is in the middle position, do not change the zone number
                 }
                 break;
-                //case MODE_D:
-                    // alien frequency test
-                //    if (prev_switchC != switch_C) // change the number if the switch is in a different position
-                //    {
-
-                    // if the switch is in the middle position, do not change the zone number
-                //    }
-                //   break;
+            case MODE_C:
+                // moving the ore paddles up and down
+                if (prev_switchC != switch_C) // change the number if the switch is in a different position
+                {
+                    if (switch_C < 1300)
+                    {
+                        //paddle_stepper_function(1);
+                    }
+                    else if (switch_C > 1700)
+                    {
+                        //paddle_stepper_function(0);
+                    }
+                    // if the switch is in the middle position, do not change the anything
+                }
+                break;
 
             default:
                 break;
@@ -379,7 +368,6 @@ void main(void) {
                 }
                 break;
             case MODE_Conductivity:
-
                 if (switch_D > 1500)
                 {
                     surface_exploration(0x04, 0x00, conductivity_zone_number, 0x00);
@@ -400,6 +388,7 @@ void main(void) {
 
             }
         }
+        //__delay_ms(3);
 
 
     }
