@@ -7,6 +7,7 @@
 
 
 #include <xc.h> //CONFIG
+#include "MotorVector.h"
 
 
 //This function take in a steering vector (0-100) and a power vector and converts them into a proportionality
@@ -18,7 +19,7 @@
 
 
 
-int motorvectorleft(powervec, steeringvec) {
+int motorvectorleft(int powervec, int steeringvec) {
     int outleft = 0;
     if (0 <= powervec <= 100 && 0 <= steeringvec <= 100){  //makes sure both values are in range (doesn't do anything if they aren't)
         if (steeringvec >> 50){ // this is for right turns
@@ -40,7 +41,7 @@ int motorvectorleft(powervec, steeringvec) {
     return outleft;
 }
 
-int motorvectorright(powervec, steeringvec) {
+int motorvectorright(int powervec, int steeringvec) {
     int outright =0;
     if (0 <= powervec <= 100 && 0 <= steeringvec <= 100){  //makes sure both values are in range (doesn't do anything if they aren't)
         if (steeringvec >> 50){ // this is for right turns
