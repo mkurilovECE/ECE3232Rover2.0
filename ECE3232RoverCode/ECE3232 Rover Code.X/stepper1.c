@@ -1,5 +1,6 @@
 #include <xc.h> //CONFIG
 #include "stepper1.h"
+#include <stdbool.h>
 #define _XTAL_FREQ 32000000 //32,000,000 HZ internal clock (32MHz)
 
 
@@ -11,15 +12,15 @@
 //got through the 8 state process 512 times to make a full rotation.
 
 
-void pump_stepper_function(void) {
+void pump_stepper_function(bool position) {
 
     int state = 1;
-    int direction = 0; //0 makes it turn left, 1 makes it turn right
+    int direction = position; //0 makes it turn left, 1 makes it turn right
     int rotations = 2; //number of full rotations
     int currstates = 0;
-    int microrotations = 0.0;
+    int microrotations = 0;
 
-    microrotations = (512 * rotations);
+    microrotations = (850); //850 is what was found to be needed for a full range operation
     if (currstates >= (microrotations)) {
         LATBbits.LATB0 = 0; //set pin 1 low
         LATBbits.LATB1 = 0; //set pin 2 low
@@ -131,13 +132,13 @@ void pump_stepper_function(void) {
     //__delay_ms(1500);   //delay and reverse for next run (this is for testing standalone)
     
     
-    if (direction == 0){ //
-        direction = 1;
-    } else {
+  //  if (direction == 0){ // this was for if
+  //      direction = 1;
+  //  } else {
     
-        direction =0;
-    }
-    currstates = 0;
+  //      direction =0;
+  //  }
+  //  currstates = 0;
  
     return;
 }
