@@ -45,9 +45,9 @@ void set_motor_settings(char motor_a_direction, char motor_a_PWM, char motor_b_d
 void set_servo_pulse(char servo_1, char servo_2, char servo_3, char servo_4);
 void set_laser_scope(char enable_flag);
 void shoot_laser(char shot_type);
-void transit_shield_code(char shield_code);
+void transit_shield_code(void);
 void request_repair_code(void);
-void transmit_repair_code(char repair_code);
+void transmit_repair_code(void);
 void surface_exploration(char task_id_lsb, char task_id_msb, char task_value_lsb, char task_value_msb);
 void processing_plant_ore_type(char ore_type);
 bool unknown_message(char* data_pointer);
@@ -67,3 +67,5 @@ extern "C" {
 #ifdef  __cplusplus
 }
 #endif /* __cplusplus */
+
+

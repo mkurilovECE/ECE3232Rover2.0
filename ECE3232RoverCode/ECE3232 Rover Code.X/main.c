@@ -343,7 +343,7 @@ void main(void) {
                     {
                         // get the repair code 
                         //transmit the repair code
-                        transmit_repair_code(repair_code);
+                        transmit_repair_code();
                     }
                     else
                     {

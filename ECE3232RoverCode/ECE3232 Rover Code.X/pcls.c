@@ -11,6 +11,10 @@
 #include <stdbool.h>
 
 
+ //TODO
+ //
+ //-add custom payload capability for custom laser command
+
 void sync(void) {
     uart_send_byte(0xFE);
     uart_send_byte(0x19);
@@ -130,11 +134,10 @@ void shoot_laser(char shot_type) {
     return;
 }
 
-void transit_shield_code(char shield_code) {
+void transit_shield_code() {
     sync();
     msg_id(0x02, 0x09);
-    payload_size(0x01, 0x00);
-    uart_send_byte(shield_code);
+    payload_size(0x00, 0x00);
     return;
 }
 
@@ -145,11 +148,10 @@ void request_repair_code(void) {
     return;
 }
 
-void transmit_repair_code(char repair_code) {
+void transmit_repair_code() {
     sync();
     msg_id(0x04, 0x09);
-    payload_size(0x01, 0x00);
-    uart_send_byte(repair_code);
+    payload_size(0x00, 0x00);
     return;
 }
 
@@ -171,3 +173,4 @@ void processing_plant_ore_type(char ore_type) {
     uart_send_byte(ore_type);
     return;
 }
+
