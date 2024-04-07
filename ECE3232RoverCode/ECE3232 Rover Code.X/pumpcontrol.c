@@ -7,7 +7,7 @@
 #pragma config FEXTOSC = OFF    // External Oscillator mode selection bits (Oscillator not enabled)
 #pragma config RSTOSC = HFINT32  // Power-up default value for COSC bits (HFINTOSC (1MHz))
 #pragma config WDTE = OFF       // WDT operating mode (WDT Disabled, SWDTEN is ignored)
-#define _XTAL_FREQ 1000000 //1,000,000 HZ internal clock (1MHz)
+#define _XTAL_FREQ 32000000 //32,000,000 HZ internal clock (1MHz)
 #define _OUTPIN_LAT LATAbits.LATA0 //uhhhhhh
 
 int PWMVAL = 10; // for now ranges from 10-100 (will need to be fixed later)
@@ -117,7 +117,7 @@ void pumpcontol(bool state) { // 0 on 1 off
     T0CON0 = 0b10000000; //set the timer to 8-bit mode
    
     int x=0;
-    while (1) {
+    while (1) { // can't do this, this is a callable function, it will get stuck
       
         x=1;
         x=0;

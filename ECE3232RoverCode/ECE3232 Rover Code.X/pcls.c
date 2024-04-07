@@ -11,10 +11,6 @@
 #include <stdbool.h>
 
 
- //TODO
- //
- //-add custom payload capability for custom laser command
-
 void sync(void) {
     uart_send_byte(0xFE);
     uart_send_byte(0x19);

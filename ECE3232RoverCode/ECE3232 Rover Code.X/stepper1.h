@@ -32,6 +32,7 @@
 #define	STEPPER1_H
 
 #include <xc.h> // include processor files - each processor file is guarded.
+#include <stdbool.h>
 
 // TODO Insert appropriate #include <>
 
@@ -54,7 +55,8 @@
  */
  // TODO Insert declarations or function prototypes (right here) to leverage
 
-void pump_stepper_function(void);
+void pump_stepper_function(bool position);
+void paddle_stepper_function(bool position);
 // live documentation
 
 #endif	/* STEPPER1_H */

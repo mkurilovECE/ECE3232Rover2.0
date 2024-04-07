@@ -23,6 +23,7 @@
 #include "setup.h"
 #include "PCLS.h"
 #include "MotorVector.h"
+#include "stepper1.h"
 
  // CONFIG1
 #pragma config FEXTOSC = ECH    // External Oscillator mode selection bits (EC above 8MHz; PFM set to high power)
@@ -81,10 +82,10 @@ int receive_finished_flag = 0;
 
 bool valid_response;
 
-typedef enum { MODE_A, MODE_B, MODE_C, MODE_D } switchC_mode_type;
+typedef enum { MODE_A, MODE_B, MODE_C } switchC_mode_type;
 typedef enum { MODE_Disable, MODE_Repair, MODE_Ore, MODE_Conductivity, MODE_FFT } laser_mode_type;
 
-switchC_mode_type switchC_mode = MODE_B;        //set switch C to ore type by default
+switchC_mode_type switchC_mode = MODE_A;        //set switch C to ore type by default
 laser_mode_type laser_mode = MODE_Disable;      // set laser to assault by default
 
 int potA = 0;
@@ -95,6 +96,8 @@ int prev_potB = 0;
 int switch_C = 0;
 int switch_D = 0;
 int prev_switchC = 0;
+int prev_switchD = 0;
+
 
 char ore_type = 0;
 char conductivity_zone_number = 0;
@@ -114,8 +117,8 @@ void __interrupt() ISR() {
             rx_data[rx_data_pointer] = RC1REG;
             rx_data_pointer++;
             rx_data[rx_data_pointer] = RC1REG;
-            RC1STAbits.SPEN = 0;            // clear the error by resetting receiver
-            RC1STAbits.SPEN = 1;
+            RC1STAbits.CREN = 0;            // clear the error by resetting receiver
+            RC1STAbits.CREN = 1;
         }
         else
         {
@@ -144,30 +147,30 @@ void __interrupt() ISR() {
         PIE3bits.TXIE = 0;          // stop transmission until the transmitter flag is up
 
     }
-    if (PIR1bits.ADIF == 1)
-    {
-        adc_data_bus = 0;
-        adc_data_bus = adc_data_bus | ADRESH;
-        adc_data_bus = adc_data_bus << 8;
-        adc_data_bus = adc_data_bus | ADRESL;
+    //if (PIR1bits.ADIF == 1)
+    //{
+    //    adc_data_bus = 0;
+    //    adc_data_bus = adc_data_bus | ADRESH;
+    //    adc_data_bus = adc_data_bus << 8;
+    //    adc_data_bus = adc_data_bus | ADRESL;
 
-        PIR1bits.ADIF = 0;
-        ADCON0bits.ADGO = 1;
+    //    PIR1bits.ADIF = 0;
+    //    ADCON0bits.ADGO = 1;
 
-        if (adc_data_bus > 0x0230)      // if voltage at RA0 > 1.805V, turn all LEDs on
-        {
-            LATAbits.LATA1 = 1;
-            LATAbits.LATA2 = 1;
-            LATAbits.LATA3 = 1;
-        }
-        else
-        {
-            LATAbits.LATA1 = 0;     // if less, turn all LEDs off
-            LATAbits.LATA2 = 0;
-            LATAbits.LATA3 = 0;
+        //if (adc_data_bus > 0x0230)      // if voltage at RA0 > 1.805V, turn all LEDs on
+        //{
+        //    LATAbits.LATA1 = 1;
+        //    LATAbits.LATA2 = 1;
+        //    LATAbits.LATA3 = 1;
+        //}
+        //else
+        //{
+        //    LATAbits.LATA1 = 0;     // if less, turn all LEDs off
+        //    LATAbits.LATA2 = 0;
+        //    LATAbits.LATA3 = 0;
 
-        }
-    }
+       /* }*/
+    //}
 
     return;
 }
@@ -183,9 +186,10 @@ void main(void) {
         //    controller_states[k] = controller_normalize(PPM_rollovers[k]);
         //    PPM_rollovers[k] = 0;
         //}
+        set_laser_scope(0x01);      // turn laser on constantly
 
         get_pcls_info();
-        __delay_us(1000);
+        __delay_us(2000);
 
         for (int i = 11; i >= 0; i--) {
             pcls_info_response[i] = rx_data[i];
@@ -199,7 +203,7 @@ void main(void) {
         }
 
         get_user_data();
-        __delay_us(2700);
+        __delay_us(3000);
         for (int p = 25; p >= 0; p--) {
             user_data_response[p] = rx_data[p];
             rx_data[p] = 0;
@@ -218,6 +222,7 @@ void main(void) {
             prev_potA = potA;   //1. copy the old controls
             prev_potB = potB;
             prev_switchC = switch_C;
+            prev_switchD = switch_D;
 
 
             potA = user_data_response[23] << 8 | user_data_response[22];  // 2. get new controls
@@ -230,24 +235,17 @@ void main(void) {
             // 4. call laser control
 
             //6. detect the switch C mode and process the input based on that
-            if (prev_potA != potA)
+            if (potA < 1300)
             {
-                if (potA < 1250)
-                {
-                    switchC_mode = MODE_A;
-                }
-                else if (potA >= 1250 && potA < 1500)
-                {
-                    switchC_mode = MODE_B;
-                }
-                else if (potA >= 1500 && potA < 1750)
-                {
-                    switchC_mode = MODE_C;
-                }
-                else
-                {
-                    switchC_mode = MODE_D;
-                }
+                switchC_mode = MODE_A;
+            }
+            else if (potA >= 1300 && potA < 1700)
+            {
+                switchC_mode = MODE_B;
+            }
+            else
+            {
+                switchC_mode = MODE_C;
             }
 
             switch (switchC_mode)
@@ -306,40 +304,32 @@ void main(void) {
             }
             // 7. detect the laser mode and shoot the appropriate laser
             // we still need to decide how we are receiving shield and repair codes
-            if (prev_potB != potB)
+            if (potB < 1200)
             {
-                if (potB < 1200)
-                {
-                    laser_mode = MODE_Disable;
-                }
-                else if (potB >= 1200 && potB < 1400)
-                {
-                    laser_mode = MODE_Repair;
-                }
-                else if (potB >= 1400 && potB < 1600)
-                {
-                    laser_mode = MODE_Ore;
-                }
-                else if (potB >= 1600 && potB < 1800)
-                {
-                    laser_mode = MODE_Conductivity;
-                }
-                else
-                {
-                    laser_mode = MODE_FFT;
-                }
+                laser_mode = MODE_Disable;
             }
-
-            // turn the laser on/off
-
-            if (switch_D > 1500) set_laser_scope(0x01);
-            else set_laser_scope(0x00);
+            else if (potB >= 1200 && potB < 1400)
+            {
+                laser_mode = MODE_Repair;
+            }
+            else if (potB >= 1400 && potB < 1600)
+            {
+                laser_mode = MODE_Ore;
+            }
+            else if (potB >= 1600 && potB < 1800)
+            {
+                laser_mode = MODE_Conductivity;
+            }
+            else
+            {
+                laser_mode = MODE_FFT;
+            }
 
             //transmit an appropriate laser based on the selected laser type 
             switch (laser_mode)
             {
             case MODE_Disable:
-                // shoot an assault laser
+                //shoot an assault laser
                 if (switch_D > 1500)
                 {
                     shoot_laser(0x02);      // shoot a high caliber
@@ -388,7 +378,7 @@ void main(void) {
 
             }
         }
-        //__delay_ms(3);
+        __delay_us(350);
 
 
     }
