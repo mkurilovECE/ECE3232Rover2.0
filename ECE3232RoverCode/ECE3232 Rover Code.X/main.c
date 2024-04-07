@@ -92,13 +92,22 @@ int potA = 0;
 int potB = 0;
 int prev_potA = 0;
 int prev_potB = 0;
-
 int switch_C = 0;
 int switch_D = 0;
 int prev_switchC = 0;
-int prev_switchD = 0;
-
-
+int prev_LeftX=0;
+int prev_LeftY=0;
+int prev_RightX=0;
+int prev_RightY=0;
+int LeftX=0;
+int LeftY=0;
+int RightX=0;
+int RightY=0;
+int Powervec=0;
+int Steeringvec=0;
+int left;
+int right;
+int dir;
 char ore_type = 0;
 char conductivity_zone_number = 0;
 int fft_frequency = 0;
