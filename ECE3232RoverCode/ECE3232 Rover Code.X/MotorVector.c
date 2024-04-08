@@ -1,15 +1,3 @@
-/*
- * File:   MotorVector.c
- * Author: Mattias Floyd
- *
- * Created on April 4, 2024, 5:15 PM
- */
-
-
-#include <xc.h> //CONFIG
-#include "MotorVector.h"
-
-
 int abs(int v) 
 {
   return v * ((v>0) - (v<0));
@@ -27,7 +15,7 @@ int motorvectorleft(int powervec, int steeringvec) {
             
         } else if(steeringvec < 50){ //this is for left turns
         
-            outleft = (powervec/100) * (steeringvec) ;
+            outleft = ((float)powervec/100) * (100-steeringvec) ;
          
         
         } else {  // this means stick is in the center and we just want it to go as fast as we push the stick straight
@@ -50,7 +38,7 @@ int motorvectorright(int powervec, int steeringvec) {
         } else if(steeringvec < 50){ //this is for left turns
         
            
-            outright = (powervec/100) * (100 - steeringvec) ;
+            outright = ((float)powervec/100) * (steeringvec) ;
         
         } else {  // this means stick is in the center and we just want it to go as fast as we push the stick straight
             
