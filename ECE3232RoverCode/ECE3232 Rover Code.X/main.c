@@ -58,17 +58,7 @@
 #pragma config CPD = OFF        // DataNVM code protection bit (Data EEPROM code protection disabled)
 
 
-#define PPM_CHANNEL_QUANTITY 10
-#define PPM_CHANNEL_QUANTITY_PLUS_ONE 11
 #define _XTAL_FREQ 32000000
-
-    //PPM monitor variables
-int PPM_channels = PPM_CHANNEL_QUANTITY;
-int controller_states[PPM_CHANNEL_QUANTITY_PLUS_ONE];
-int timer_status = 0;
-int channel = 1;
-int PPM_rollovers[PPM_CHANNEL_QUANTITY_PLUS_ONE] = { 0 };
-int PPM_complete = 0;
 
 //uart and pcls variables
 char rx_data[100] = { 0 };
@@ -140,17 +130,7 @@ void __interrupt() ISR() {
             rx_data_pointer = 0;
         }
     }
-    //if (IOCCFbits.IOCCF7 == 1){
-    //    IOCCFbits.IOCCF7 = 0;       //clear interrupt flag
 
-    //    controller_rising_edge_interrupt(&timer_status, &channel, &PPM_complete, &PPM_channels);
-    //}
-    //if (PIR0bits.TMR0IF == 1) {
-    //    PIR0bits.TMR0IF = 0;        //clear interrupt flag
-
-    //    PPM_rollovers[channel]++;   //increment channel interrupt counter
-    //    PPM_rollovers[0]++;         //increment total interrupt counter
-    //}
     if (PIR3bits.TXIF == 1 && PIE3bits.TXIE == 1)
     {
         PIE3bits.TXIE = 0;          // stop transmission until the transmitter flag is up
@@ -190,11 +170,7 @@ void main(void) {
     setup();
 
     while (1) {
-        //controller_main(&PPM_complete, &channel, &timer_status);
-        //for (int k = 0; k <= PPM_CHANNEL_QUANTITY_PLUS_ONE; k++){
-        //    controller_states[k] = controller_normalize(PPM_rollovers[k]);
-        //    PPM_rollovers[k] = 0;
-        //}
+        
         set_laser_scope(0x01);      // turn laser on constantly
 
         get_pcls_info();
