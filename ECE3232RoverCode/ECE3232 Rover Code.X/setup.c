@@ -9,17 +9,19 @@
 #include "setup.h"
 
 void setup(void) {
-    ////RC7 rising edge detection
+    //RC7 rising edge detection
     //TRISCbits.TRISC7 = 1;           //enable input on RC7  
     //ANSELCbits.ANSC7 = 0;           //disable analog pin
     //IOCCPbits.IOCCP7 = 1;           //IOCCFC7 bit and IOCIF flag set upon detecting a positive edge
 
-    ////TMR0
-    //T0CON1bits.T0CS = 0b010;        //F0sc/4 clock source, synchronised to Fosc/4, 1:2 prescaler
-    //T0CON1bits.T0ASYNC = 0;
-    //T0CON1bits.T0CKPS = 0b0000;
-    //TMR0H = 80;                     //TMR0 compare register = 56, 200 cycles before overflow = 50us
-    //TMR0L = 0;
+    //TMR0
+    T0CON1bits.T0CS = 0b010;        //F0sc/4 clock source, synchronised to Fosc/4, 1:32768 prescaler
+    T0CON1bits.T0ASYNC = 0;
+    T0CON1bits.T0CKPS = 0b1111;     // divide the clock to 32 Mhz/4/32768 = 244.14 cycles/sec
+    TMR0H = 13;                     //TMR0 compare register = 13 to make the timer trigger every 53 ms
+    TMR0L = 0;
+    T0CON0bits.T016BIT = 0;
+    T0CON0bits.T0EN = 1;
 
     //USART
     TX1STAbits.TXEN = 1;            // enable EUSART transmitter
@@ -63,14 +65,14 @@ void setup(void) {
     //PIR0bits.IOCIF = 0;             //clear interrupt on change interrupt flag
     //PIE0bits.IOCIE = 1;             //enable IOC interrupt on change
 
-    //PIR0bits.TMR0IF = 0;            //clear TMR0 interrupt flag
-    //PIE0bits.TMR0IE = 1;            //enable TMR0 rollover interrupt 
+    PIR0bits.TMR0IF = 0;            //clear TMR0 interrupt flag
+    PIE0bits.TMR0IE = 1;            //enable TMR0 rollover interrupt 
 
     PIE3bits.RCIE = 1;              //enable USART receive interrupt
     PIE3bits.TXIE = 1;              //enable USART transmit interrupt
 
-    PIR1bits.ADIF = 0;              // clear ADC Interrupt Flag
-    PIE1bits.ADIE = 1;              // enable ADC Interrupt
+    //PIR1bits.ADIF = 0;              // clear ADC Interrupt Flag
+    //PIE1bits.ADIE = 1;              // enable ADC Interrupt
 
     INTCONbits.GIE = 1;             //enable global interrupts
     INTCONbits.PEIE = 1;            //enable peripheral interrupts

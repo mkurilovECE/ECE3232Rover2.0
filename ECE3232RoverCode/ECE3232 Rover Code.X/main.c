@@ -73,8 +73,10 @@ int PPM_complete = 0;
 //uart and pcls variables
 char rx_data[100] = { 0 };
 char rx_data_pointer = 0;
-char pcls_info_response[12] = { 0 };
-char user_data_response[26] = { 0 };
+volatile char pcls_info_response[12] = { 0 };
+volatile char user_data_response[26] = { 0 };
+volatile char pcls_pointer = 0;
+volatile char user_pointer = 0;
 
 int adc_data_bus = 0;
 
@@ -119,39 +121,73 @@ char repair_code_flag = 0;
 char repair_code = 0;
 
 char shield_code_flag = 0;
+
+volatile char timer_flag = 0;
+char counter = 0;
+volatile char pclsStart = 0;
+volatile char pclsEnd = 0;
+volatile char userStart = 0;
+volatile char userEnd = 0;
+
 void __interrupt() ISR() {
     if (PIR3bits.RCIF == 1 && PIE3bits.RCIE == 1) {
 
+        if (pclsStart == 1)
+        {
+            pcls_info_response[pcls_pointer] = RC1REG;
+            pcls_pointer++;
+            if (pcls_pointer == 12)
+            {
+                pclsStart = 0;
+                pclsEnd = 1;
+                pcls_pointer = 0;
+            }
+        }
+        else if (userStart == 1)
+        {
+            user_data_response[user_pointer] = RC1REG;
+            user_pointer++;
+            if (user_pointer == 26)
+            {
+                userStart = 0;
+                userEnd = 1;
+                user_pointer = 0;
+            }
+        }
+
         if (RC1STAbits.OERR == 1 || RC1STAbits.FERR == 1)   // if overflow or framing error occur 
         {
-            rx_data[rx_data_pointer] = RC1REG;
-            rx_data_pointer++;
-            rx_data[rx_data_pointer] = RC1REG;
+            //rx_data[rx_data_pointer] = RC1REG;
+            //rx_data_pointer++;
+            //rx_data[rx_data_pointer] = RC1REG;
             RC1STAbits.CREN = 0;            // clear the error by resetting receiver
             RC1STAbits.CREN = 1;
         }
-        else
-        {
-            rx_data[rx_data_pointer] = RC1REG;
-        }
+        //else
+        //{
+        //    rx_data[rx_data_pointer] = RC1REG;
+        //}
 
-        rx_data_pointer++;
-        if (rx_data_pointer == 100)      // if the last character in the buffer was written
-        {
-            rx_data_pointer = 0;
-        }
+        //rx_data_pointer++;
+        //if (rx_data_pointer == 100)      // if the last character in the buffer was written
+        //{
+        //    rx_data_pointer = 0;
+        //}
     }
     //if (IOCCFbits.IOCCF7 == 1){
     //    IOCCFbits.IOCCF7 = 0;       //clear interrupt flag
 
     //    controller_rising_edge_interrupt(&timer_status, &channel, &PPM_complete, &PPM_channels);
     //}
-    //if (PIR0bits.TMR0IF == 1) {
-    //    PIR0bits.TMR0IF = 0;        //clear interrupt flag
+    if (PIR0bits.TMR0IF == 1) {
+        PIR0bits.TMR0IF = 0;        //clear interrupt flag
 
-    //    PPM_rollovers[channel]++;   //increment channel interrupt counter
-    //    PPM_rollovers[0]++;         //increment total interrupt counter
-    //}
+        //if (userStart == 0 || pclsStart == 0) 
+        timer_flag = 1;
+
+        //    PPM_rollovers[channel]++;   //increment channel interrupt counter
+        //    PPM_rollovers[0]++;         //increment total interrupt counter
+    }
     if (PIR3bits.TXIF == 1 && PIE3bits.TXIE == 1)
     {
         PIE3bits.TXIE = 0;          // stop transmission until the transmitter flag is up
@@ -198,29 +234,47 @@ void main(void) {
         //}
         //set_laser_scope(0x01);      // turn laser on constantly
         //__delay_us(1000);
-
-        get_pcls_info();
-        __delay_us(2000);
-
-        for (int i = 11; i >= 0; i--) {
-            pcls_info_response[i] = rx_data[i];
-            rx_data[i] = 0;
-            rx_data_pointer--;
+        while (timer_flag == 0)
+        {
         }
-        if (expected_pcls_info_response(pcls_info_response))
+        if (pclsStart == 0 && counter == 0 && timer_flag == 1)
+        {
+            get_pcls_info();
+            timer_flag = 0;
+            counter = !counter;
+            pclsStart = 1;
+            pclsEnd = 0;
+        }
+
+        //__delay_us(2000);
+
+        //for (int i = 11; i >= 0; i--) {
+        //    pcls_info_response[i] = rx_data[i];
+        //    rx_data[i] = 0;
+        //    rx_data_pointer--;
+        //}
+        if (pclsEnd == 1 && expected_pcls_info_response(pcls_info_response))
         {
             shield_code_flag = pcls_info_response[10];
             repair_code_flag = pcls_info_response[11];
+
         }
 
-        get_user_data();
-        __delay_us(3000);
-        for (int p = 25; p >= 0; p--) {
-            user_data_response[p] = rx_data[p];
-            rx_data[p] = 0;
-            rx_data_pointer--;
+        if (userStart == 0 && counter == 1 && timer_flag == 1)
+        {
+            get_user_data();
+            timer_flag = 0;
+            counter = !counter;
+            userStart = 1;
+            userEnd = 0;
         }
-        if (expected_user_info_response(user_data_response))
+
+        //for (int p = 25; p >= 0; p--) {
+        //    user_data_response[p] = rx_data[p];
+        //    rx_data[p] = 0;
+        //    rx_data_pointer--;
+        //}
+        if (userEnd == 1 && expected_user_info_response(user_data_response))
         {
 
             // 1. copy the old controls
@@ -252,13 +306,19 @@ void main(void) {
             right = (char)motorvectorright(Powervec, Steeringvec);
             dir = (char)direction(Powervec);
 
-            set_motor_settings(dir, left, dir, right);
-            __delay_us(350);
+            while (timer_flag != 1)
+            {
+            }
+            set_motor_settings(dir, left, dir, right);    //min 60% duty cycle to make the rover move independetly
+            timer_flag = 0;
 
             // 4. call laser gimble
 
+            while (timer_flag != 1)
+            {
+            }
             set_servo_pulse((char)(RightX / 10), (char)(LeftX / 10), 0, 0);
-            __delay_us(350);
+            timer_flag = 0;
 
             //6. detect the switch C mode and process the input based on that
             if (potA < 1300)
@@ -351,7 +411,11 @@ void main(void) {
                 laser_mode = MODE_FFT;
             }
 
-            //transmit an appropriate laser based on the selected laser type 
+            //transmit an appropriate laser based on the selected laser type
+
+            while (timer_flag != 1)
+            {
+            }
             switch (laser_mode)
             {
             case MODE_Disable:
@@ -403,9 +467,8 @@ void main(void) {
 
 
             }
+            timer_flag = 0;
         }
-        __delay_us(350);
-
 
     }
 
