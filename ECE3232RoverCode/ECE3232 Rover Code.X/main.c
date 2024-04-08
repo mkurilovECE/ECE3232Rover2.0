@@ -58,17 +58,7 @@
 #pragma config CPD = OFF        // DataNVM code protection bit (Data EEPROM code protection disabled)
 
 
-#define PPM_CHANNEL_QUANTITY 10
-#define PPM_CHANNEL_QUANTITY_PLUS_ONE 11
 #define _XTAL_FREQ 32000000
-
-    //PPM monitor variables
-int PPM_channels = PPM_CHANNEL_QUANTITY;
-int controller_states[PPM_CHANNEL_QUANTITY_PLUS_ONE];
-int timer_status = 0;
-int channel = 1;
-int PPM_rollovers[PPM_CHANNEL_QUANTITY_PLUS_ONE] = { 0 };
-int PPM_complete = 0;
 
 //uart and pcls variables
 char rx_data[100] = { 0 };
