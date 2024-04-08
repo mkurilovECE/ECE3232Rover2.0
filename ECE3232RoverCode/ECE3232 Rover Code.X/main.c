@@ -58,7 +58,17 @@
 #pragma config CPD = OFF        // DataNVM code protection bit (Data EEPROM code protection disabled)
 
 
+#define PPM_CHANNEL_QUANTITY 10
+#define PPM_CHANNEL_QUANTITY_PLUS_ONE 11
 #define _XTAL_FREQ 32000000
+
+    //PPM monitor variables
+int PPM_channels = PPM_CHANNEL_QUANTITY;
+int controller_states[PPM_CHANNEL_QUANTITY_PLUS_ONE];
+int timer_status = 0;
+int channel = 1;
+int PPM_rollovers[PPM_CHANNEL_QUANTITY_PLUS_ONE] = { 0 };
+int PPM_complete = 0;
 
 //uart and pcls variables
 char rx_data[100] = { 0 };
@@ -87,10 +97,10 @@ int switch_C = 0;
 int switch_D = 0;
 int prev_switchC = 0;
 
-int prev_LeftX = 0;
-int prev_LeftY = 0;
-int prev_RightX = 0;
-int prev_RightY = 0;
+int prev_LeftX=0;
+int prev_LeftY=0;
+int prev_RightX=0;
+int prev_RightY=0;
 
 int LeftX = 0;
 int LeftY = 0;
@@ -121,8 +131,8 @@ volatile char userEnd = 0;
 
 void __interrupt() ISR() {
     if (PIR3bits.RCIF == 1 && PIE3bits.RCIE == 1) {
-
-        if (pclsStart == 1)
+        
+        if (counter == 0 && pclsStart == 1)
         {
             pcls_info_response[pcls_pointer] = RC1REG;
             pcls_pointer++;
@@ -131,9 +141,10 @@ void __interrupt() ISR() {
                 pclsStart = 0;
                 pclsEnd = 1;
                 pcls_pointer = 0;
+                counter = !counter;
             }
         }
-        else if (userStart == 1)
+        else if (counter == 1 && userStart == 1)
         {
             user_data_response[user_pointer] = RC1REG;
             user_pointer++;
@@ -142,6 +153,7 @@ void __interrupt() ISR() {
                 userStart = 0;
                 userEnd = 1;
                 user_pointer = 0;
+                counter = !counter;
             }
         }
 
@@ -150,8 +162,8 @@ void __interrupt() ISR() {
             //rx_data[rx_data_pointer] = RC1REG;
             //rx_data_pointer++;
             //rx_data[rx_data_pointer] = RC1REG;
-            RC1STAbits.CREN = 0;            // clear the error by resetting receiver
-            RC1STAbits.CREN = 1;
+            RC1STAbits.SPEN = 0;            // clear the error by resetting receiver
+            RC1STAbits.SPEN = 1;
         }
         //else
         //{
@@ -171,12 +183,12 @@ void __interrupt() ISR() {
     //}
     if (PIR0bits.TMR0IF == 1) {
         PIR0bits.TMR0IF = 0;        //clear interrupt flag
-
+        
         //if (userStart == 0 || pclsStart == 0) 
         timer_flag = 1;
 
-        //    PPM_rollovers[channel]++;   //increment channel interrupt counter
-        //    PPM_rollovers[0]++;         //increment total interrupt counter
+    //    PPM_rollovers[channel]++;   //increment channel interrupt counter
+    //    PPM_rollovers[0]++;         //increment total interrupt counter
     }
     if (PIR3bits.TXIF == 1 && PIE3bits.TXIE == 1)
     {
@@ -231,13 +243,13 @@ void main(void) {
         {
             get_pcls_info();
             timer_flag = 0;
-            counter = !counter;
+            //counter = !counter;
             pclsStart = 1;
             pclsEnd = 0;
         }
-
+        
         //__delay_us(2000);
-
+        
         //for (int i = 11; i >= 0; i--) {
         //    pcls_info_response[i] = rx_data[i];
         //    rx_data[i] = 0;
@@ -247,18 +259,19 @@ void main(void) {
         {
             shield_code_flag = pcls_info_response[10];
             repair_code_flag = pcls_info_response[11];
+            pclsEnd = 0;
 
         }
-
+        
         if (userStart == 0 && counter == 1 && timer_flag == 1)
         {
             get_user_data();
             timer_flag = 0;
-            counter = !counter;
+            //counter = !counter;
             userStart = 1;
             userEnd = 0;
         }
-
+        
         //for (int p = 25; p >= 0; p--) {
         //    user_data_response[p] = rx_data[p];
         //    rx_data[p] = 0;
@@ -266,7 +279,7 @@ void main(void) {
         //}
         if (userEnd == 1 && expected_user_info_response(user_data_response))
         {
-
+            
             // 1. copy the old controls
             // 2. get the new controls
             // 3. call wheel control
@@ -275,47 +288,53 @@ void main(void) {
             // 6. detect the laser mode and shoot the appropriate laser
 
             prev_switchC = switch_C;
-            prev_LeftX = LeftX;
-            prev_LeftY = LeftY;
-            prev_RightX = RightX;
-            prev_RightY = RightY;
+            prev_LeftX=LeftX;
+            prev_LeftY=LeftY;
+            prev_RightX=RightX;
+            prev_RightY=RightY;
 
             potA = user_data_response[23] << 8 | user_data_response[22];  // 2. get new controls
             potB = user_data_response[25] << 8 | user_data_response[24];
             switch_C = user_data_response[19] << 8 | user_data_response[18];
             switch_D = user_data_response[21] << 8 | user_data_response[20];
+            
             RightX = user_data_response[7] << 8 | user_data_response[6];
             LeftX = user_data_response[13] << 8 | user_data_response[12];
             RightY = user_data_response[9] << 8 | user_data_response[8];
             LeftY = user_data_response[11] << 8 | user_data_response[10];
             // 3. call wheel control
-            if (LeftY>=1600){
-                  Powervec= (((LeftY - 1600)/8)+50);
-                  dir=1;
+            if (LeftY >= 1600)
+            {
+                Powervec = (((LeftY - 1600)/8)+50);
+                dir = 1;
             }
-            if (LeftY<=1400){
-              Powervec= (( (   (2000-LeftY) - 600)/8)+50);
-              dir=2;
+            else if (LeftY <= 1400)
+            {
+              Powervec = (( (   (2000-LeftY) - 600)/8)+50);
+              dir = 2;
             }
-            else{Powervec=0;
-            dir=0;}
+            else 
+            {
+                Powervec = 0;
+                dir = 0;
+            }
+            
             Steeringvec = (LeftX - 1000) / 10;
+            
             left = (char)motorvectorleft(Powervec, Steeringvec);
             right = (char)motorvectorright(Powervec, Steeringvec);
-            
-
+   
             while (timer_flag != 1)
             {
             }
-            set_motor_settings(dir, left, dir, right);    //min 60% duty cycle to make the rover move independetly
+            set_motor_settings(dir, right, dir, left);    //min 60% duty cycle to make the rover move independetly
             timer_flag = 0;
-
             // 4. call laser gimble
-
+            
             while (timer_flag != 1)
             {
             }
-            set_servo_pulse((char)(RightX / 10), (char)(LeftX / 10), 0, 0);
+            set_servo_pulse((char)(RightX/10),(char)(LeftX/10),0,0);
             timer_flag = 0;
 
             //6. detect the switch C mode and process the input based on that
@@ -410,8 +429,8 @@ void main(void) {
             }
 
             //transmit an appropriate laser based on the selected laser type
-
-            while (timer_flag != 1)
+            
+            while(timer_flag != 1)
             {
             }
             switch (laser_mode)
@@ -466,9 +485,18 @@ void main(void) {
 
             }
             timer_flag = 0;
+            userEnd = 0;
         }
 
     }
 
     return;
 }
+
+
+
+
+
+
+
+
