@@ -228,16 +228,38 @@ void main(void) {
             // 5. detect the switch C mode and process the input based on that
             // 6. detect the laser mode and shoot the appropriate laser
 
-            prev_potA = potA;   //1. copy the old controls
+          
+
+
+         prev_potA = potA;   //1. copy the old controls
             prev_potB = potB;
             prev_switchC = switch_C;
             prev_switchD = switch_D;
-
+            prev_LeftX=LeftX;
+            prev_LeftY=LeftY;
+            prev_RightX=RightX;
+            prev_RightY=RightY;
 
             potA = user_data_response[23] << 8 | user_data_response[22];  // 2. get new controls
             potB = user_data_response[25] << 8 | user_data_response[24];
             switch_C = user_data_response[19] << 8 | user_data_response[18];
             switch_D = user_data_response[21] << 8 | user_data_response[20];
+            RightX = user_data_response[7] << 8 | user_data_response[6];
+            LeftX = user_data_response[11] << 8 | user_data_response[10];
+            RightY = user_data_response[9] << 8 | user_data_response[8];
+            LeftY = user_data_response[12] << 8 | user_data_response[11];
+            // 3. call wheel control
+            // 4. call laser control
+            Powervec=(LeftY-1000)/10;
+            Steeringvec=(LeftX-1000)/10;
+            left=motorvectorleft(Powervec,Steeringvec);
+            right=motorvectorright(Powervec,Steeringvec);
+            dir=direction(Powervec);
+            set_motor_settings(left,dir,right,dir);
+            set_servo_pulse((char)(RightX/10),(char)(LeftX/10),0,0);
+            //6. detect the switch C mode and process the input based on that
+
+           
 
 
             // 3. call wheel control
