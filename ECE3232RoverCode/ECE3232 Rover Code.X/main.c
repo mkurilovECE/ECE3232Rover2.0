@@ -90,21 +90,22 @@ laser_mode_type laser_mode = MODE_Disable;      // set laser to assault by defau
 
 int potA = 0;
 int potB = 0;
-int prev_potA = 0;
-int prev_potB = 0;
+
 int switch_C = 0;
 int switch_D = 0;
 int prev_switchC = 0;
-int prev_LeftX=0;
-int prev_LeftY=0;
-int prev_RightX=0;
-int prev_RightY=0;
-int LeftX=0;
-int LeftY=0;
-int RightX=0;
-int RightY=0;
-int Powervec=0;
-int Steeringvec=0;
+
+int prev_LeftX = 0;
+int prev_LeftY = 0;
+int prev_RightX = 0;
+int prev_RightY = 0;
+
+int LeftX = 0;
+int LeftY = 0;
+int RightX = 0;
+int RightY = 0;
+int Powervec = 0;
+int Steeringvec = 0;
 int left;
 int right;
 int dir;
@@ -195,7 +196,8 @@ void main(void) {
         //    controller_states[k] = controller_normalize(PPM_rollovers[k]);
         //    PPM_rollovers[k] = 0;
         //}
-        set_laser_scope(0x01);      // turn laser on constantly
+        //set_laser_scope(0x01);      // turn laser on constantly
+        //__delay_us(1000);
 
         get_pcls_info();
         __delay_us(2000);
@@ -228,42 +230,35 @@ void main(void) {
             // 5. detect the switch C mode and process the input based on that
             // 6. detect the laser mode and shoot the appropriate laser
 
-          
-
-
-         prev_potA = potA;   //1. copy the old controls
-            prev_potB = potB;
             prev_switchC = switch_C;
-            prev_switchD = switch_D;
-            prev_LeftX=LeftX;
-            prev_LeftY=LeftY;
-            prev_RightX=RightX;
-            prev_RightY=RightY;
+            prev_LeftX = LeftX;
+            prev_LeftY = LeftY;
+            prev_RightX = RightX;
+            prev_RightY = RightY;
 
             potA = user_data_response[23] << 8 | user_data_response[22];  // 2. get new controls
             potB = user_data_response[25] << 8 | user_data_response[24];
             switch_C = user_data_response[19] << 8 | user_data_response[18];
             switch_D = user_data_response[21] << 8 | user_data_response[20];
             RightX = user_data_response[7] << 8 | user_data_response[6];
-            LeftX = user_data_response[11] << 8 | user_data_response[10];
+            LeftX = user_data_response[13] << 8 | user_data_response[12];
             RightY = user_data_response[9] << 8 | user_data_response[8];
-            LeftY = user_data_response[12] << 8 | user_data_response[11];
+            LeftY = user_data_response[11] << 8 | user_data_response[10];
             // 3. call wheel control
-            // 4. call laser control
-            Powervec=(LeftY-1000)/10;
-            Steeringvec=(LeftX-1000)/10;
-            left=motorvectorleft(Powervec,Steeringvec);
-            right=motorvectorright(Powervec,Steeringvec);
-            dir=direction(Powervec);
-            set_motor_settings(left,dir,right,dir);
-            set_servo_pulse((char)(RightX/10),(char)(LeftX/10),0,0);
-            //6. detect the switch C mode and process the input based on that
 
-           
+            Powervec = (LeftY - 1000) / 10;
+            Steeringvec = (LeftX - 1000) / 10;
+            left = (char)motorvectorleft(Powervec, Steeringvec);
+            right = (char)motorvectorright(Powervec, Steeringvec);
+            dir = (char)direction(Powervec);
 
+            set_motor_settings(dir, left, dir, right);
+            __delay_us(350);
 
-            // 3. call wheel control
-            // 4. call laser control
+            // 4. call laser gimble
+
+            set_servo_pulse((char)(RightX / 10), (char)(LeftX / 10), 0, 0);
+            __delay_us(350);
 
             //6. detect the switch C mode and process the input based on that
             if (potA < 1300)
