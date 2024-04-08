@@ -289,12 +289,20 @@ void main(void) {
             RightY = user_data_response[9] << 8 | user_data_response[8];
             LeftY = user_data_response[11] << 8 | user_data_response[10];
             // 3. call wheel control
-
-            Powervec = (LeftY - 1000) / 10;
+            if (LeftY>=1600){
+                  Powervec= (((LeftY - 1600)/8)+50);
+                  dir=1;
+            }
+            if (LeftY<=1400){
+              Powervec= (( (   (2000-LeftY) - 600)/8)+50);
+              dir=2;
+            }
+            else{Powervec=0;
+            dir=0;}
             Steeringvec = (LeftX - 1000) / 10;
             left = (char)motorvectorleft(Powervec, Steeringvec);
             right = (char)motorvectorright(Powervec, Steeringvec);
-            dir = (char)direction(Powervec);
+            
 
             while (timer_flag != 1)
             {
@@ -464,11 +472,3 @@ void main(void) {
 
     return;
 }
-
-
-
-
-
-
-
-
