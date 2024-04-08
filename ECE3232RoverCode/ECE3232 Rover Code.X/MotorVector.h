@@ -43,6 +43,7 @@
 
 int motorvectorleft(int powervec, int steeringvec);
 int motorvectorright(int powervec, int steeringvec);
+int direction(int powervec);
 // TODO Insert declarations or function prototypes (right here) to leverage 
 // live documentation
 
@@ -58,6 +59,3 @@ extern "C" {
 #ifdef	__cplusplus
 }
 #endif /* __cplusplus */
-
-
-
