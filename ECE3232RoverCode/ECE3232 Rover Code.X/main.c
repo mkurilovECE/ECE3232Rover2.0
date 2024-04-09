@@ -179,27 +179,27 @@ void __interrupt() ISR() {
     }
     if (PIR1bits.ADIF == 1)
     {
-        //    adc_data_bus = 0;
-        //    adc_data_bus = adc_data_bus | ADRESH;
-        //    adc_data_bus = adc_data_bus << 8;
-        //    adc_data_bus = adc_data_bus | ADRESL;
+        adc_data_bus = 0;
+        adc_data_bus = adc_data_bus | ADRESH;
+        adc_data_bus = adc_data_bus << 8;
+        adc_data_bus = adc_data_bus | ADRESL;
 
-        //    PIR1bits.ADIF = 0;
-        //    ADCON0bits.ADGO = 1;
+        PIR1bits.ADIF = 0;
+        ADCON0bits.ADGO = 1;
 
-            //if (adc_data_bus > 0x0230)      // if voltage at RA0 > 1.805V, turn all LEDs on
-            //{
-            //    LATAbits.LATA1 = 1;
-            //    LATAbits.LATA2 = 1;
-            //    LATAbits.LATA3 = 1;
-            //}
-            //else
-            //{
-            //    LATAbits.LATA1 = 0;     // if less, turn all LEDs off
-            //    LATAbits.LATA2 = 0;
-            //    LATAbits.LATA3 = 0;
+        if (adc_data_bus > 0x0230)      // if voltage at RA0 > 1.805V, turn all LEDs on
+        {
+            LATAbits.LATA1 = 1;
+            LATAbits.LATA2 = 1;
+            //LATAbits.LATA3 = 1;
+        }
+        else
+        {
+            LATAbits.LATA1 = 0;     // if less, turn all LEDs off
+            LATAbits.LATA2 = 0;
+          //LATAbits.LATA3 = 0;
 
-           /* }*/
+         }
     }
 
     return;
