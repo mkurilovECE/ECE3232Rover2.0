@@ -9,6 +9,6 @@ void pumpcontol(bool state) { // 1 on 0 off
     
     //RC2 for output
     TRISCbits.TRISC2 =state; //Make RC2 the state of the input parameter
-    ANSELCbits.ANSC2 =0;
+    ANSELCbits.ANSC3 =0;
     return;
 }
