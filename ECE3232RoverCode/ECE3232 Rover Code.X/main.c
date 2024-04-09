@@ -18,7 +18,6 @@
 #include <xc.h>
 #include <stdbool.h>
 #include<stdio.h>
-#include "controller.h"
 #include "UART.h"
 #include "setup.h"
 #include "PCLS.h"
@@ -57,22 +56,25 @@
 #pragma config CP = OFF         // UserNVM Program memory code protection bit (Program Memory code protection disabled)
 #pragma config CPD = OFF        // DataNVM code protection bit (Data EEPROM code protection disabled)
 
-
 #define _XTAL_FREQ 32000000
 
+//PPM monitor variables
+//int PPM_channels = PPM_CHANNEL_QUANTITY;
+//int controller_states[PPM_CHANNEL_QUANTITY_PLUS_ONE];
+//int timer_status = 0;
+//int channel = 1;
+//int PPM_rollovers[PPM_CHANNEL_QUANTITY_PLUS_ONE] = { 0 };
+//int PPM_complete = 0;
+
 //uart and pcls variables
-char rx_data[100] = { 0 };
-char rx_data_pointer = 0;
+//char rx_data[100] = { 0 };
+//char rx_data_pointer = 0;
+
+
 volatile char pcls_info_response[12] = { 0 };
 volatile char user_data_response[26] = { 0 };
 volatile char pcls_pointer = 0;
 volatile char user_pointer = 0;
-
-int adc_data_bus = 0;
-
-int receive_finished_flag = 0;
-
-bool valid_response;
 
 typedef enum { MODE_A, MODE_B, MODE_C } switchC_mode_type;
 typedef enum { MODE_Disable, MODE_Repair, MODE_Ore, MODE_Conductivity, MODE_FFT } laser_mode_type;
@@ -80,49 +82,55 @@ typedef enum { MODE_Disable, MODE_Repair, MODE_Ore, MODE_Conductivity, MODE_FFT 
 switchC_mode_type switchC_mode = MODE_A;        //set switch C to ore type by default
 laser_mode_type laser_mode = MODE_Disable;      // set laser to assault by default
 
-int potA = 0;
-int potB = 0;
+// joystick controls
+int RightX = 0;
+int RightY = 0;
+int LeftX = 0;
+int LeftY = 0;
 
+// switch controls
+int switch_A = 0;
+int switch_B = 0;
 int switch_C = 0;
 int switch_D = 0;
 int prev_switchC = 0;
 
-int prev_LeftX = 0;
-int prev_LeftY = 0;
-int prev_RightX = 0;
-int prev_RightY = 0;
+// potentiometer controls
+int potA = 0;
+int potB = 0;
 
-int LeftX = 0;
-int LeftY = 0;
-int RightX = 0;
-int RightY = 0;
+// parameters for calculating wheel controls
 int Powervec = 0;
 int Steeringvec = 0;
 int left;
 int right;
 int dir;
+
+// task parameters
 char ore_type = 0;
 char conductivity_zone_number = 0;
 int fft_frequency = 0;
 char fft_frequency_lsb = 0;
 char fft_frequency_msb = 0;
+int adc_data_bus = 0;
 
 char repair_code_flag = 0;
-char repair_code = 0;
-
 char shield_code_flag = 0;
 
+
+// Command transmission parameters
 volatile char timer_flag = 0;
 char counter = 0;
 volatile char pclsStart = 0;
 volatile char pclsEnd = 0;
 volatile char userStart = 0;
 volatile char userEnd = 0;
+bool valid_response;
 
 void __interrupt() ISR() {
     if (PIR3bits.RCIF == 1 && PIE3bits.RCIE == 1) {
 
-        if (pclsStart == 1)
+        if (counter == 0 && pclsStart == 1)
         {
             pcls_info_response[pcls_pointer] = RC1REG;
             pcls_pointer++;
@@ -131,9 +139,10 @@ void __interrupt() ISR() {
                 pclsStart = 0;
                 pclsEnd = 1;
                 pcls_pointer = 0;
+                counter = !counter;
             }
         }
-        else if (userStart == 1)
+        else if (counter == 1 && userStart == 1)
         {
             user_data_response[user_pointer] = RC1REG;
             user_pointer++;
@@ -142,41 +151,21 @@ void __interrupt() ISR() {
                 userStart = 0;
                 userEnd = 1;
                 user_pointer = 0;
+                counter = !counter;
             }
         }
 
         if (RC1STAbits.OERR == 1 || RC1STAbits.FERR == 1)   // if overflow or framing error occur 
         {
-            //rx_data[rx_data_pointer] = RC1REG;
-            //rx_data_pointer++;
-            //rx_data[rx_data_pointer] = RC1REG;
-            RC1STAbits.CREN = 0;            // clear the error by resetting receiver
-            RC1STAbits.CREN = 1;
+            RC1STAbits.SPEN = 0;            // clear the error by resetting receiver
+            RC1STAbits.SPEN = 1;
         }
-        //else
-        //{
-        //    rx_data[rx_data_pointer] = RC1REG;
-        //}
-
-        //rx_data_pointer++;
-        //if (rx_data_pointer == 100)      // if the last character in the buffer was written
-        //{
-        //    rx_data_pointer = 0;
-        //}
     }
-    //if (IOCCFbits.IOCCF7 == 1){
-    //    IOCCFbits.IOCCF7 = 0;       //clear interrupt flag
 
-    //    controller_rising_edge_interrupt(&timer_status, &channel, &PPM_complete, &PPM_channels);
-    //}
     if (PIR0bits.TMR0IF == 1) {
         PIR0bits.TMR0IF = 0;        //clear interrupt flag
 
-        //if (userStart == 0 || pclsStart == 0) 
         timer_flag = 1;
-
-        //    PPM_rollovers[channel]++;   //increment channel interrupt counter
-        //    PPM_rollovers[0]++;         //increment total interrupt counter
     }
     if (PIR3bits.TXIF == 1 && PIE3bits.TXIE == 1)
     {
@@ -217,13 +206,7 @@ void main(void) {
     setup();
 
     while (1) {
-        //controller_main(&PPM_complete, &channel, &timer_status);
-        //for (int k = 0; k <= PPM_CHANNEL_QUANTITY_PLUS_ONE; k++){
-        //    controller_states[k] = controller_normalize(PPM_rollovers[k]);
-        //    PPM_rollovers[k] = 0;
-        //}
-        //set_laser_scope(0x01);      // turn laser on constantly
-        //__delay_us(1000);
+
         while (timer_flag == 0)
         {
         }
@@ -231,22 +214,16 @@ void main(void) {
         {
             get_pcls_info();
             timer_flag = 0;
-            counter = !counter;
+            //counter = !counter;
             pclsStart = 1;
             pclsEnd = 0;
         }
 
-        //__delay_us(2000);
-
-        //for (int i = 11; i >= 0; i--) {
-        //    pcls_info_response[i] = rx_data[i];
-        //    rx_data[i] = 0;
-        //    rx_data_pointer--;
-        //}
         if (pclsEnd == 1 && expected_pcls_info_response(pcls_info_response))
         {
             shield_code_flag = pcls_info_response[10];
             repair_code_flag = pcls_info_response[11];
+            pclsEnd = 0;
 
         }
 
@@ -254,16 +231,11 @@ void main(void) {
         {
             get_user_data();
             timer_flag = 0;
-            counter = !counter;
+            //counter = !counter;
             userStart = 1;
             userEnd = 0;
         }
 
-        //for (int p = 25; p >= 0; p--) {
-        //    user_data_response[p] = rx_data[p];
-        //    rx_data[p] = 0;
-        //    rx_data_pointer--;
-        //}
         if (userEnd == 1 && expected_user_info_response(user_data_response))
         {
 
@@ -271,35 +243,60 @@ void main(void) {
             // 2. get the new controls
             // 3. call wheel control
             // 4. call laser control
-            // 5. detect the switch C mode and process the input based on that
-            // 6. detect the laser mode and shoot the appropriate laser
+            // 5. check switch A to turn water pump on/off
+            // 6. check switch B to do FFT
+            // 7. detect the switch C mode and process the input based on that
+            // 8. detect the laser mode and shoot the appropriate laser
 
             prev_switchC = switch_C;
-            prev_LeftX = LeftX;
-            prev_LeftY = LeftY;
-            prev_RightX = RightX;
-            prev_RightY = RightY;
 
-            potA = user_data_response[23] << 8 | user_data_response[22];  // 2. get new controls
-            potB = user_data_response[25] << 8 | user_data_response[24];
-            switch_C = user_data_response[19] << 8 | user_data_response[18];
-            switch_D = user_data_response[21] << 8 | user_data_response[20];
             RightX = user_data_response[7] << 8 | user_data_response[6];
             LeftX = user_data_response[13] << 8 | user_data_response[12];
             RightY = user_data_response[9] << 8 | user_data_response[8];
             LeftY = user_data_response[11] << 8 | user_data_response[10];
+
+            switch_A = user_data_response[15] << 8 | user_data_response[14];
+            switch_B = user_data_response[17] << 8 | user_data_response[16];
+            switch_C = user_data_response[19] << 8 | user_data_response[18];
+            switch_D = user_data_response[21] << 8 | user_data_response[20];
+
+            potA = user_data_response[23] << 8 | user_data_response[22];  // 2. get new controls
+            potB = user_data_response[25] << 8 | user_data_response[24];
+
+
             // 3. call wheel control
+            if (RightY >= 1600)
+            {
+                Powervec = (((RightY - 1600) / 8) + 50);
+                dir = 1;
+            }
+            else if (RightY <= 1400)
+            {
+                Powervec = ((((2000 - RightY) - 600) / 8) + 50);
+                dir = 2;
+            }
+            else
+            {
+                Powervec = 0;
+                dir = 0;
+            }
 
-            Powervec = (LeftY - 1000) / 10;
-            Steeringvec = (LeftX - 1000) / 10;
-            left = (char)motorvectorleft(Powervec, Steeringvec);
-            right = (char)motorvectorright(Powervec, Steeringvec);
-            dir = (char)direction(Powervec);
+            Steeringvec = (RightX - 1000) / 10;
 
+            right = motorvectorleft(Powervec, Steeringvec);
+            left = motorvectorright(Powervec, Steeringvec);
+            if (left > right) {
+                left = left + right;
+                right = 2 * right;
+            }
+            else if (right > left) {
+                right = left + right;
+                left = 2 * left;
+            }
             while (timer_flag != 1)
             {
             }
-            set_motor_settings(dir, left, dir, right);    //min 60% duty cycle to make the rover move independetly
+            set_motor_settings(dir, (char)right, dir, (char)left);    //min 60% duty cycle to make the rover move independetly
             timer_flag = 0;
 
             // 4. call laser gimble
@@ -309,6 +306,14 @@ void main(void) {
             }
             set_servo_pulse((char)(RightX / 10), (char)(LeftX / 10), 0, 0);
             timer_flag = 0;
+
+            // 5. check switch A for water pump
+
+            if (switch_A < 1500)    // if switch is up
+            {
+
+            }
+
 
             //6. detect the switch C mode and process the input based on that
             if (potA < 1300)
@@ -458,17 +463,10 @@ void main(void) {
 
             }
             timer_flag = 0;
+            userEnd = 0;
         }
 
     }
 
     return;
 }
-
-
-
-
-
-
-
-
