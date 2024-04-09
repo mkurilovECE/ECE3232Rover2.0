@@ -154,8 +154,8 @@ void pump_arm_stepper_function(bool direction) {    //0 makes it turn left, 1 ma
     if (currstates >= (microrotations)) {
         LATBbits.LATB4 = 0; //set pin 1 low
         LATBbits.LATB5 = 0; //set pin 2 low
-        LATAbits.LATA3 = 0; //set pin 3 low
-        LATAbits.LATA4 = 0; //set pin 4 low
+        LATCbits.LATC0 = 0; //set pin 3 low
+        LATCbits.LATC7 = 0; //set pin 4 low
     }
     TRISBbits.TRISB4 = 0; //configures pin 1 stepper output
     ANSELBbits.ANSB4 = 0;
@@ -163,11 +163,11 @@ void pump_arm_stepper_function(bool direction) {    //0 makes it turn left, 1 ma
     TRISBbits.TRISB5 = 0; //configures pin 2 stepper output
     ANSELBbits.ANSB5 = 0;
 
-    TRISAbits.TRISA3 = 0; //configures pin 3 stepper output
-    ANSELAbits.ANSA3 = 0;
+    TRISCbits.TRISC0 = 0; //configures pin 3 stepper output
+    ANSELCbits.ANSC0 = 0;
 
-    TRISAbits.TRISA4 = 0; //configures pin 4 stepper output
-    ANSELAbits.ANSA4 = 0;
+    TRISCbits.TRISC7 = 0; //configures pin 4 stepper output
+    ANSELCbits.ANSC7 = 0;
 
 
     while (currstates <= (microrotations)) {
@@ -176,56 +176,56 @@ void pump_arm_stepper_function(bool direction) {    //0 makes it turn left, 1 ma
         case 1:
             LATBbits.LATB4 = 1; //set pin 1 high
             LATBbits.LATB5 = 1; //set pin 2 high
-            LATAbits.LATA3 = 1; //set pin 3 high
-            LATAbits.LATA4 = 0; //set pin 4 low
+            LATCbits.LATC0 = 1; //set pin 3 high
+            LATCbits.LATC7 = 0; //set pin 4 low
             break;
         case 2:
             LATBbits.LATB4 = 1; //set pin 1 high
             LATBbits.LATB5 = 1; //set pin 2 high
-            LATAbits.LATA3 = 0; //set pin 3 low
-            LATAbits.LATA4 = 0; //set pin 4 low
+            LATCbits.LATC0 = 0; //set pin 3 low
+            LATCbits.LATC7 = 0; //set pin 4 low
             break;
         case 3:
             LATBbits.LATB4 = 1; //set pin 1 high
             LATBbits.LATB5 = 1; //set pin 2 high
-            LATAbits.LATA3 = 0; //set pin 3 low
-            LATAbits.LATA4 = 1; //set pin 4 high
+            LATCbits.LATC0 = 0; //set pin 3 low
+            LATCbits.LATC7 = 1; //set pin 4 high
             break;
         case 4:
             LATBbits.LATB4 = 1; //set pin 1 high
             LATBbits.LATB5 = 0; //set pin 2 low
-            LATAbits.LATA3 = 0; //set pin 3 low
-            LATAbits.LATA4 = 1; //set pin 4 high
+            LATCbits.LATC0 = 0; //set pin 3 low
+            LATCbits.LATC7 = 1; //set pin 4 high
             break;
         case 5:
             LATBbits.LATB4 = 1; //set pin 1 high
             LATBbits.LATB5 = 0; //set pin 2 low
-            LATAbits.LATA3 = 1; //set pin 3 high
-            LATAbits.LATA4 = 1; //set pin 4 high
+            LATCbits.LATC0 = 1; //set pin 3 high
+            LATCbits.LATC7 = 1; //set pin 4 high
             break;
         case 6:
             LATBbits.LATB4 = 0; //set pin 1 low
             LATBbits.LATB5 = 0; //set pin 2 low
-            LATAbits.LATA3 = 1; //set pin 3 high
-            LATAbits.LATA4 = 1; //set pin 4 high
+            LATCbits.LATC0 = 1; //set pin 3 high
+            LATCbits.LATC7 = 1; //set pin 4 high
             break;
         case 7:
             LATBbits.LATB4 = 0; //set pin 1 low
             LATBbits.LATB5 = 1; //set pin 2 high
-            LATAbits.LATA3 = 1; //set pin 3 high
-            LATAbits.LATA4 = 1; //set pin 4 high
+            LATCbits.LATC0 = 1; //set pin 3 high
+            LATCbits.LATC7 = 1; //set pin 4 high
             break;
         case 8:
             LATBbits.LATB4 = 0; //set pin 1 low
             LATBbits.LATB5 = 1; //set pin 2 high
-            LATAbits.LATA3 = 1; //set pin 3 high
-            LATAbits.LATA4 = 0; //set pin 4 low
+            LATCbits.LATC0 = 1; //set pin 3 high
+            LATCbits.LATC7 = 0; //set pin 4 low
             break;
         default:
             LATBbits.LATB4 = 0; //set pin 1 low
             LATBbits.LATB5 = 0; //set pin 2 low
-            LATAbits.LATA3 = 0; //set pin 3 low
-            LATAbits.LATA4 = 0; //set pin 4 low
+            LATCbits.LATC0 = 0; //set pin 3 low
+            LATCbits.LATC7 = 0; //set pin 4 low
             state = 1;
             break;
         }
@@ -250,8 +250,8 @@ void pump_arm_stepper_function(bool direction) {    //0 makes it turn left, 1 ma
         if (currstates >= (microrotations)) {
             LATBbits.LATB4 = 0; //set pin 1 low
             LATBbits.LATB5 = 0; //set pin 2 low
-            LATAbits.LATA3 = 0; //set pin 3 low
-            LATAbits.LATA4 = 0; //set pin 4 low
+            LATCbits.LATC0 = 0; //set pin 3 low
+            LATCbits.LATC7 = 0; //set pin 4 low
             break;
         }
 
