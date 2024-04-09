@@ -300,12 +300,13 @@ void main(void) {
             timer_flag = 0;
 
             // 4. call laser gimble
-
-            while (timer_flag != 1)
+             int servoX=125-(LeftX/6);
+            
+              while (timer_flag != 1)
             {
             }
-            set_servo_pulse((char)(RightX / 10), (char)(LeftX / 10), 0, 0);
-            timer_flag = 0;
+            set_servo_pulse(servoX,servoX,servoX,servoX);
+           
 
             // 5. check switch A for water pump
 
