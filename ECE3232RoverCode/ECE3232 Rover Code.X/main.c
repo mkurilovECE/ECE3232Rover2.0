@@ -109,6 +109,9 @@ int left;
 int right;
 int dir;
 
+int servoX = 0;
+int servoY = 0;
+
 // task parameters
 char ore_type = 0;
 char conductivity_zone_number = 0;
@@ -303,12 +306,13 @@ void main(void) {
             timer_flag = 0;
 
             // 4. call laser gimble
-             int servoX=125-(LeftX/6);
-             int servoY=125-(LeftY/6);
+             servoX = 125-(LeftX/6);
+             servoY = 125-(LeftY/6);
               while (timer_flag != 1)
             {
             }
-            set_servo_pulse(servoX,0,0,0);
+            set_servo_pulse((char)servoX,0,0,0);
+            timer_flag = 0; 
            
 
             // 5. check switch A for water pump
