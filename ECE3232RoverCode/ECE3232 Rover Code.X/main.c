@@ -109,9 +109,6 @@ int left;
 int right;
 int dir;
 
-int servoX = 0;
-int servoY = 0;
-
 // task parameters
 char ore_type = 0;
 char conductivity_zone_number = 0;
@@ -119,7 +116,7 @@ int fft_frequency = 0;
 char fft_frequency_lsb = 0;
 char fft_frequency_msb = 0;
 int adc_data_bus = 0;
-
+char Servo_Extend=0;   
 char repair_code_flag = 0;
 char shield_code_flag = 0;
 
@@ -306,13 +303,12 @@ void main(void) {
             timer_flag = 0;
 
             // 4. call laser gimble
-             servoX = 125-(LeftX/6);
-             servoY = 125-(LeftY/6);
+             int servoX=125-(LeftX/6);
+             int servoY=125-(LeftY/6);
               while (timer_flag != 1)
             {
             }
-            set_servo_pulse((char)servoX,0,0,0);
-            timer_flag = 0; 
+            set_servo_pulse(servoX,servoY, Servo_Extend,0);
            
 
             // 5. check switch A for water pump
@@ -329,8 +325,7 @@ void main(void) {
             // 6. check switch B for conductivity test
             if (switch_B < 1500)     // if switch B is up
             {
-                // move the probes switch forward
-
+            Servo_Extend=250;   
             }
 
             //6. detect the switch C mode and process the input based on that
