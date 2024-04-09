@@ -305,7 +305,7 @@ void main(void) {
               while (timer_flag != 1)
             {
             }
-            set_servo_pulse(servoX,servoX,servoX,servoX);
+            set_servo_pulse(servoX,0,0,0);
            
 
             // 5. check switch A for water pump
