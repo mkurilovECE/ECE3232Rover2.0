@@ -116,6 +116,8 @@ int fft_frequency = 0;
 char fft_frequency_lsb = 0;
 char fft_frequency_msb = 0;
 int adc_data_bus = 0;
+int servoY;
+int servoX;
 char Servo_Extend=0;   
 char repair_code_flag = 0;
 char shield_code_flag = 0;
@@ -308,7 +310,7 @@ void main(void) {
               while (timer_flag != 1)
             {
             }
-            set_servo_pulse(servoX,servoY, Servo_Extend,0);
+            set_servo_pulse((char)servoX,(char)servoY, (char)Servo_Extend,0);
            
 
             // 5. check switch A for water pump
