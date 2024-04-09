@@ -273,7 +273,7 @@ void pump_arm_stepper_function(bool direction) {    //0 makes it turn left, 1 ma
     return;
 }
 
-void pumpcontol(bool state) { // 1 on 0 off
+void pumpcontrol(bool state) { // 1 on 0 off
 
     //RC2 for output
     TRISCbits.TRISC2 = state; //Make RC2 the state of the input parameter
