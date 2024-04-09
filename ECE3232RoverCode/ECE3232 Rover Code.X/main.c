@@ -304,7 +304,7 @@ void main(void) {
 
             // 4. call laser gimble
              int servoX=125-(LeftX/6);
-            
+             int servoY=125-(LeftY/6);
               while (timer_flag != 1)
             {
             }
@@ -388,11 +388,11 @@ void main(void) {
                 {
                     if (switch_C < 1300)
                     {
-                        //paddle_stepper_function(1);
+                        paddle_stepper_function(1);
                     }
                     else if (switch_C > 1700)
                     {
-                        //paddle_stepper_function(0);
+                        paddle_stepper_function(0);
                     }
                     // if the switch is in the middle position, do not change the anything
                 }
