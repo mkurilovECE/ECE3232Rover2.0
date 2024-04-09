@@ -55,7 +55,7 @@
  */
  // TODO Insert declarations or function prototypes (right here) to leverage
 
-void pump_stepper_function(bool position);
+void pump_arm_stepper_function(bool position);
 void paddle_stepper_function(bool position);
 // live documentation
 

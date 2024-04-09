@@ -226,7 +226,7 @@ void main(void) {
             pclsEnd = 0;
 
         }
-
+        
         if (userStart == 0 && counter == 1 && timer_flag == 1)
         {
             get_user_data();
@@ -238,7 +238,7 @@ void main(void) {
 
         if (userEnd == 1 && expected_user_info_response(user_data_response))
         {
-
+            
             // 1. copy the old controls
             // 2. get the new controls
             // 3. call wheel control
@@ -298,13 +298,12 @@ void main(void) {
             }
             set_motor_settings(dir, (char)right, dir, (char)left);    //min 60% duty cycle to make the rover move independetly
             timer_flag = 0;
-
             // 4. call laser gimble
-
+            
             while (timer_flag != 1)
             {
             }
-            set_servo_pulse((char)(RightX / 10), (char)(LeftX / 10), 0, 0);
+            set_servo_pulse((char)(RightX/10),(char)(LeftX/10),0,0);
             timer_flag = 0;
 
             // 5. check switch A for water pump
@@ -407,8 +406,8 @@ void main(void) {
             }
 
             //transmit an appropriate laser based on the selected laser type
-
-            while (timer_flag != 1)
+            
+            while(timer_flag != 1)
             {
             }
             switch (laser_mode)

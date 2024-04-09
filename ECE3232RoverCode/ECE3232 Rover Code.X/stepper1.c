@@ -130,23 +130,22 @@ void paddle_stepper_function(bool position) {
 
     }
     //__delay_ms(1500);   //delay and reverse for next run (this is for testing standalone)
-    
-    
+
+
   //  if (direction == 0){ // this was for if
   //      direction = 1;
   //  } else {
-    
+
   //      direction =0;
   //  }
   //  currstates = 0;
- 
+
     return;
 }
 
-void pump_stepper_function(bool position) {
+void pump_arm_stepper_function(bool direction) {    //0 makes it turn left, 1 makes it turn right
 
     int state = 1;
-    int direction = position; //0 makes it turn left, 1 makes it turn right
     int rotations = 2; //number of full rotations
     int currstates = 0;
     int microrotations = 0;
@@ -261,15 +260,15 @@ void pump_stepper_function(bool position) {
 
     }
     //__delay_ms(1500);   //delay and reverse for next run (this is for testing standalone)
-    
-    
+
+
   //  if (direction == 0){ // this was for if
   //      direction = 1;
   //  } else {
-    
+
   //      direction =0;
   //  }
   //  currstates = 0;
- 
+
     return;
 }
