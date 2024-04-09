@@ -76,7 +76,7 @@ volatile char user_data_response[26] = { 0 };
 volatile char pcls_pointer = 0;
 volatile char user_pointer = 0;
 
-typedef enum { MODE_A, MODE_B, MODE_C } switchC_mode_type;
+typedef enum { MODE_A, MODE_B, MODE_C, MODE_D } switchC_mode_type;
 typedef enum { MODE_Disable, MODE_Repair, MODE_Ore, MODE_Conductivity, MODE_FFT } laser_mode_type;
 
 switchC_mode_type switchC_mode = MODE_A;        //set switch C to ore type by default
@@ -172,30 +172,30 @@ void __interrupt() ISR() {
         PIE3bits.TXIE = 0;          // stop transmission until the transmitter flag is up
 
     }
-    //if (PIR1bits.ADIF == 1)
-    //{
-    //    adc_data_bus = 0;
-    //    adc_data_bus = adc_data_bus | ADRESH;
-    //    adc_data_bus = adc_data_bus << 8;
-    //    adc_data_bus = adc_data_bus | ADRESL;
+    if (PIR1bits.ADIF == 1)
+    {
+        //    adc_data_bus = 0;
+        //    adc_data_bus = adc_data_bus | ADRESH;
+        //    adc_data_bus = adc_data_bus << 8;
+        //    adc_data_bus = adc_data_bus | ADRESL;
 
-    //    PIR1bits.ADIF = 0;
-    //    ADCON0bits.ADGO = 1;
+        //    PIR1bits.ADIF = 0;
+        //    ADCON0bits.ADGO = 1;
 
-        //if (adc_data_bus > 0x0230)      // if voltage at RA0 > 1.805V, turn all LEDs on
-        //{
-        //    LATAbits.LATA1 = 1;
-        //    LATAbits.LATA2 = 1;
-        //    LATAbits.LATA3 = 1;
-        //}
-        //else
-        //{
-        //    LATAbits.LATA1 = 0;     // if less, turn all LEDs off
-        //    LATAbits.LATA2 = 0;
-        //    LATAbits.LATA3 = 0;
+            //if (adc_data_bus > 0x0230)      // if voltage at RA0 > 1.805V, turn all LEDs on
+            //{
+            //    LATAbits.LATA1 = 1;
+            //    LATAbits.LATA2 = 1;
+            //    LATAbits.LATA3 = 1;
+            //}
+            //else
+            //{
+            //    LATAbits.LATA1 = 0;     // if less, turn all LEDs off
+            //    LATAbits.LATA2 = 0;
+            //    LATAbits.LATA3 = 0;
 
-       /* }*/
-    //}
+           /* }*/
+    }
 
     return;
 }
@@ -226,7 +226,7 @@ void main(void) {
             pclsEnd = 0;
 
         }
-        
+
         if (userStart == 0 && counter == 1 && timer_flag == 1)
         {
             get_user_data();
@@ -238,13 +238,13 @@ void main(void) {
 
         if (userEnd == 1 && expected_user_info_response(user_data_response))
         {
-            
+
             // 1. copy the old controls
             // 2. get the new controls
             // 3. call wheel control
             // 4. call laser control
             // 5. check switch A to turn water pump on/off
-            // 6. check switch B to do FFT
+            // 6. check switch B to do conductivity test
             // 7. detect the switch C mode and process the input based on that
             // 8. detect the laser mode and shoot the appropriate laser
 
@@ -298,34 +298,49 @@ void main(void) {
             }
             set_motor_settings(dir, (char)right, dir, (char)left);    //min 60% duty cycle to make the rover move independetly
             timer_flag = 0;
+
             // 4. call laser gimble
-            
+
             while (timer_flag != 1)
             {
             }
-            set_servo_pulse((char)(RightX/10),(char)(LeftX/10),0,0);
+            set_servo_pulse((char)(RightX / 10), (char)(LeftX / 10), 0, 0);
             timer_flag = 0;
 
             // 5. check switch A for water pump
 
-            if (switch_A < 1500)    // if switch is up
+            if (switch_A < 1500)    // if switch A is up
             {
+                pumpcontrol(1);                     // turn the pump on;
+            }
+            else if (switch_A > 1500)
+            {
+                pumpcontrol(0);                     // turn the pump off
+            }
+
+            // 6. check switch B for conductivity test
+            if (switch_B < 1500)     // if switch B is up
+            {
+                // move the probes switch forward
 
             }
 
-
             //6. detect the switch C mode and process the input based on that
-            if (potA < 1300)
+            if (potA < 1250)
             {
                 switchC_mode = MODE_A;
             }
-            else if (potA >= 1300 && potA < 1700)
+            else if (potA >= 1250 && potA < 1500)
             {
                 switchC_mode = MODE_B;
             }
-            else
+            else if (potA >= 1500 && potA <= 1750)
             {
                 switchC_mode = MODE_C;
+            }
+            else
+            {
+                switchC_mode = MODE_D;
             }
 
             switch (switchC_mode)
@@ -378,6 +393,21 @@ void main(void) {
                     // if the switch is in the middle position, do not change the anything
                 }
                 break;
+            case MODE_D:
+                // moving the pump arm up and down
+                if (prev_switchC != switch_C) // change the number if the switch is in a different position
+                {
+                    if (switch_C < 1300)
+                    {
+                        pump_arm_stepper_function(1);       // move the pump arm up
+                    }
+                    else if (switch_C > 1700)
+                    {
+                        pump_arm_stepper_function(0);       // move the pump arm down
+                    }
+                    // if the switch is in the middle position, do not change the anything
+                }
+                break;
 
             default:
                 break;
@@ -406,8 +436,8 @@ void main(void) {
             }
 
             //transmit an appropriate laser based on the selected laser type
-            
-            while(timer_flag != 1)
+
+            while (timer_flag != 1)
             {
             }
             switch (laser_mode)

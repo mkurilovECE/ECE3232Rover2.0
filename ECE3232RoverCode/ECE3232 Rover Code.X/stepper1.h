@@ -57,6 +57,7 @@
 
 void pump_arm_stepper_function(bool position);
 void paddle_stepper_function(bool position);
+void pumpcontol(bool state);
 // live documentation
 
 #endif	/* STEPPER1_H */
