@@ -329,6 +329,9 @@ void main(void) {
             {
             Servo_Extend=250;   
             }
+            else
+            {
+            Servo_Extend=0;}
 
             //6. detect the switch C mode and process the input based on that
             if (potA < 1250)
