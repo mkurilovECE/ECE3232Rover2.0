@@ -82,6 +82,9 @@ typedef enum { MODE_Disable, MODE_Repair, MODE_Ore, MODE_Conductivity, MODE_FFT 
 switchC_mode_type switchC_mode = MODE_A;        //set switch C to ore type by default
 laser_mode_type laser_mode = MODE_Disable;      // set laser to assault by default
 
+
+//flag for fft
+int fftflag=1;
 // joystick controls
 int RightX = 0;
 int RightY = 0;
@@ -480,11 +483,20 @@ void main(void) {
                 break;
             case MODE_FFT:
                 // this should be the frequency we get from the FFT task
-                fft_frequency_lsb = fft_frequency & 0XFF;
-                fft_frequency_msb = (fft_frequency & 0XFF00) >> 8;
+                if(fftflag==1){
+                fft_frequency_lsb = 0b0000111000110100 & 0XFF;
+                fft_frequency_msb = (0b000011100011010 & 0XFF00) >> 8;}
+                else if(fftflag==2){
+                fft_frequency_lsb = 0b0000101110111000 & 0XFF;
+                fft_frequency_msb = (0b0000101110111000 & 0XFF00) >> 8;}
+                else{
+                fft_frequency_lsb = 0b0000001111101000 & 0XFF;
+                fft_frequency_msb = (0b0000001111101000 & 0XFF00) >> 8;}
+                
                 if (switch_D > 1500)
                 {
                     surface_exploration(0x02, 0x00, fft_frequency_lsb, fft_frequency_msb);
+                    fftflag++;
                 }
                 break;
             default:
