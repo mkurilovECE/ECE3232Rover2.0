@@ -117,7 +117,7 @@ char fft_frequency_lsb = 0;
 char fft_frequency_msb = 0;
 int adc_data_bus = 0;
 int servoY;
-int servoX;
+
 char Servo_Extend=0;   
 char repair_code_flag = 0;
 char shield_code_flag = 0;
@@ -177,30 +177,30 @@ void __interrupt() ISR() {
         PIE3bits.TXIE = 0;          // stop transmission until the transmitter flag is up
 
     }
-    if (PIR1bits.ADIF == 1)
-    {
-        adc_data_bus = 0;
-        adc_data_bus = adc_data_bus | ADRESH;
-        adc_data_bus = adc_data_bus << 8;
-        adc_data_bus = adc_data_bus | ADRESL;
+    //if (PIR1bits.ADIF == 1)
+    //{
+        //    adc_data_bus = 0;
+        //    adc_data_bus = adc_data_bus | ADRESH;
+        //    adc_data_bus = adc_data_bus << 8;
+        //    adc_data_bus = adc_data_bus | ADRESL;
 
-        PIR1bits.ADIF = 0;
-        ADCON0bits.ADGO = 1;
+        //    PIR1bits.ADIF = 0;
+        //    ADCON0bits.ADGO = 1;
 
-        if (adc_data_bus > 0x0230)      // if voltage at RA0 > 1.805V, turn all LEDs on
-        {
-            LATAbits.LATA1 = 1;
-            LATAbits.LATA2 = 1;
-            //LATAbits.LATA3 = 1;
-        }
-        else
-        {
-            LATAbits.LATA1 = 0;     // if less, turn all LEDs off
-            LATAbits.LATA2 = 0;
-          //LATAbits.LATA3 = 0;
+            //if (adc_data_bus > 0x0230)      // if voltage at RA0 > 1.805V, turn all LEDs on
+            //{
+            //    LATAbits.LATA1 = 1;
+            //    LATAbits.LATA2 = 1;
+            //    LATAbits.LATA3 = 1;
+            //}
+            //else
+            //{
+            //    LATAbits.LATA1 = 0;     // if less, turn all LEDs off
+            //    LATAbits.LATA2 = 0;
+            //    LATAbits.LATA3 = 0;
 
-         }
-    }
+           /* }*/
+    //}
 
     return;
 }
@@ -211,7 +211,6 @@ void main(void) {
     setup();
 
     while (1) {
-
         while (timer_flag == 0)
         {
         }
@@ -294,25 +293,24 @@ void main(void) {
                 left = left + right;
                 right = 2 * right;
             }
-            else if (right > left) {
+            else if (right > left) {  
                 right = left + right;
                 left = 2 * left;
             }
             while (timer_flag != 1)
             {
-            }
+            }  
             set_motor_settings(dir, (char)right, dir, (char)left);    //min 60% duty cycle to make the rover move independetly
             timer_flag = 0;
 
-            // 4. call laser gimble
-             int servoX=125-(LeftX/6);
-             int servoY=125-(LeftY/6);
+             // 4. call laser gimble
+            int servoX=140-(LeftX/6);
+            int servoY=125-(LeftY/6);
               while (timer_flag != 1)
             {
             }
-            set_servo_pulse((char)servoX,(char)servoY, (char)Servo_Extend,0);
-           
-
+            set_servo_pulse(0,Servo_Extend,servoY,servoX);
+            timer_flag=0;
             // 5. check switch A for water pump
 
             if (switch_A < 1500)    // if switch A is up
@@ -327,11 +325,11 @@ void main(void) {
             // 6. check switch B for conductivity test
             if (switch_B < 1500)     // if switch B is up
             {
-            Servo_Extend=250;   
+            Servo_Extend=125-(2000/6);   
             }
             else
             {
-            Servo_Extend=0;}
+            Servo_Extend=125-(1000/6);}
 
             //6. detect the switch C mode and process the input based on that
             if (potA < 1250)
