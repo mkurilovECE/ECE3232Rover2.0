@@ -1,6 +1,6 @@
 /*
  * File:   main.c
- * Author: Declan
+ * Author: Murray, Mattais, and Marina
  *
  * -Wait in controller.c while(timer start = 0) loop for controller input
  * -On rising edge detected, trigger interrupt and go to ISR
